@@ -117,6 +117,45 @@ class Wavesim2d {
     _initCompute();
   }
 
+  /// Displace a granule at a given point ([x], [y]).
+  ///
+  /// [dx] is the magnitude of the displacement along the x-axis and [dy] is
+  /// the magnitude of the displacement along the y-axis.
+  ///
+  /// If [vx] and [vy] are not null, the velocity of the granule at ([x], [y])
+  /// is set to [vx] and [vy] along the x and y axes respectively.
+  /// If [vx] and [vy] are null, the velocity of the granule is set to
+  /// [dx] and [dy] in the x and y axes respectively.
+  ///
+  /// A negative [x] / [y] is interpreted relative to the right/bottom edge of
+  /// the visible grid.
+  void displace({
+    required int x,
+    required int y,
+    required double dx,
+    required double dy,
+    double? vx,
+    double? vy
+  }) {
+    final i = _index(x, y);
+    final offset = i * types.Float32List.bytesPerElement;
+
+    device.queue.writeBuffer(
+        _uCurrent,
+        offset,
+        types.Float32List.fromList([dx, dy]).toJS
+    );
+
+    device.queue.writeBuffer(
+        _uPrev,
+        offset,
+        types.Float32List.fromList([
+          vx != null ? dx - vx : 0,
+          vy != null ? dy - vy : 0
+        ]).toJS
+    );
+  }
+
   /// Update the state of the simulation by a single step.
   Future<void> update() async {
     _time++;
@@ -141,7 +180,7 @@ class Wavesim2d {
 
     render.render(
         encoder: encoder,
-        data: _currentBuffer > 0 ? _u1 : _u2
+        data: _uPrev
     );
 
     device.queue.submit([encoder.finish()].toJS);
@@ -196,6 +235,54 @@ class Wavesim2d {
 
   /// The currently bound simulation state buffer.
   var _currentBuffer = 0;
+
+  /// Offset to the left edge of the visible grid
+  int get _offsetX => (gridSize.width - visibleSize.width) ~/ 2;
+
+  /// Offset to the top edge of the visible grid
+  int get _offsetY => (gridSize.height - visibleSize.height) ~/ 2;
+
+  /// The buffer holding the current simulation state
+  GPUBuffer get _uCurrent => _currentBuffer > 0 ? _u2 : _u1;
+
+  /// The buffer holding the previous simulation state.
+  ///
+  /// This is also the buffer where the next simulation state is written to.
+  GPUBuffer get _uPrev => _currentBuffer > 0 ? _u1 : _u2;
+
+  /// Get the absolute X coordinate of a granule.
+  ///
+  /// [x] is the X coordinate of the granule relative to the visible grid.
+  /// If [x] is less than zero it is interpreted relative to the right edge
+  /// of the visible grid.
+  int _xIndex(int x) {
+    if (x < 0) {
+      x += visibleSize.width;
+    }
+
+    return x + _offsetX;
+  }
+
+  /// Get the absolute Y coordinate of a granule.
+  ///
+  /// [y] is the Y coordinate of the granule relative to the visible grid.
+  /// If [y] is less than zero it is interpreted relative to the bottom edge
+  /// of the visible grid.
+  int _yIndex(int y) {
+    if (y < 0) {
+      y += visibleSize.height;
+    }
+
+    return y + _offsetY;
+  }
+
+  /// Get the index of the buffer element holding the state of a granule.
+  ///
+  /// [x] and [y] are the x and y coordinates of the granule relative to the
+  /// visible grid. A negative [x]/[y] is interpreted relative to the right /
+  /// bottom edge of the visible grid.
+  int _index(int x, int y) =>
+      2 * (_yIndex(y) * gridSize.width + _xIndex(x));
 
   static Size _calcVisibleSize({
     required Size size,

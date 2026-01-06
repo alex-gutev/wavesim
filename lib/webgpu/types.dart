@@ -37,6 +37,11 @@ extension type GPUShaderModule._(JSObject _) implements JSObject {}
 extension type GPUQueue._(JSObject _) implements JSObject {
   external void submit(JSArray<GPUCommandBuffer> commandBuffers);
   external JSPromise onSubmittedWorkDone();
+
+  external void writeBuffer(GPUBuffer buffer, int bufferOffset, JSTypedArray data, [
+    int dataOffset,
+    int size
+  ]);
 }
 
 extension type GPUBindGroupLayout._(JSObject _) implements JSObject {}
