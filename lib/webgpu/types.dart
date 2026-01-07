@@ -9,6 +9,7 @@ extension WebGPUExtension on Navigator {
 
 extension type GPU._(JSObject _) implements JSObject {
   external JSPromise<GPUAdapter?> requestAdapter();
+  external String getPreferredCanvasFormat();
 }
 
 extension type GPUAdapter._(JSObject _) implements JSObject {
@@ -24,6 +25,8 @@ extension type GPUDevice._(JSObject _) implements JSObject {
 
   external GPUPipelineLayout createPipelineLayout(PipelineLayoutDescriptor descriptor);
   external GPUComputePipeline createComputePipeline(ComputePipelineLayout descriptor);
+
+  external GPURenderPipeline createRenderPipeline(RenderPipelineLayout descriptor);
 
   external GPUBuffer createBuffer(BufferDescriptor descriptor);
 
@@ -61,6 +64,7 @@ extension type GPUBindGroup._(JSObject _) implements JSObject {}
 extension type GPUCommandEncoder._(JSObject _) implements JSObject {
   external void clearBuffer(GPUBuffer buffer, [int? offset, int? size]);
   external GPUComputePassEncoder beginComputePass();
+  external GPURenderPassEncoder beginRenderPass(RenderPassDescriptor descriptor);
 
   external GPUCommandBuffer finish();
 }
@@ -73,6 +77,23 @@ extension type GPUComputePassEncoder._(JSObject _) implements JSObject {
 }
 
 extension type GPUCommandBuffer._(JSObject _) implements JSObject {}
+
+extension type GPUCanvasContext._(JSObject _) implements JSObject {
+  external void configure(CanvasConfiguration configuration);
+  external GPUTexture getCurrentTexture();
+}
+
+extension type GPURenderPipeline._(JSObject _) implements JSObject {}
+
+extension type GPURenderPassEncoder._(JSObject _) implements JSObject {
+  external void setPipeline(GPURenderPipeline pipeline);
+  external void setVertexBuffer(int slot, GPUBuffer buffer, [int? offset, int? size]);
+  external void setBindGroup(int index, GPUBindGroup bindGroup);
+  external void draw(int vertexCount, [int? instanceCount, int? firstVertex, int? firstInstance]);
+  external void end();
+}
+
+extension type GPUTexture._(JSObject _) implements JSObject {}
 
 // Descriptors
 
@@ -200,4 +221,122 @@ extension type ShaderDescriptor._(JSObject _) implements JSObject {
 
   external String get code;
   external String? get label;
+}
+
+extension type CanvasConfiguration._(JSObject _) implements JSObject {
+  external CanvasConfiguration({
+    required GPUDevice device,
+    required String format,
+    String? alphaMode
+  });
+
+  external GPUDevice get device;
+  external String get format;
+  external String? get alphaMode;
+}
+
+extension type RenderPipelineLayout._(JSObject _) implements JSObject {
+  external RenderPipelineLayout({
+    required GPUPipelineLayout layout,
+    required Vertex vertex,
+    required Fragment fragment,
+    String? label,
+    Primitive? primitive
+  });
+
+  external GPUPipelineLayout get layout;
+  external String? get label;
+  external Primitive? get primitive;
+  external Vertex get vertex;
+  external Fragment get fragment;
+}
+
+extension type Primitive._(JSObject _) implements JSObject {
+  external Primitive({
+    String? topology
+  });
+
+  external String? get topology;
+}
+
+extension type Vertex._(JSObject _) implements JSObject {
+  external Vertex({
+    JSAny? constants,
+    String? entryPoint,
+    JSArray<VertexBuffer>? buffers,
+    required GPUShaderModule module
+  });
+
+  external JSAny? get constants;
+  external String? get entryPoint;
+  external GPUShaderModule get module;
+  external JSArray<VertexBuffer>? get buffers;
+}
+
+extension type VertexBuffer._(JSObject _) implements JSObject {
+  external VertexBuffer({
+    required int arrayStride,
+    required JSArray<VertexAttribute> attributes,
+    required String stepMode
+  });
+
+  external int get arrayStride;
+  external JSArray<VertexAttribute> get attributes;
+  external String get stepMode;
+}
+
+extension type VertexAttribute._(JSObject _) implements JSObject {
+  external VertexAttribute({
+    required int shaderLocation,
+    required int offset,
+    required String format
+  });
+
+  external int get shaderLocation;
+  external int get offset;
+  external String get format;
+}
+
+extension type Fragment._(JSObject _) implements JSObject {
+  external Fragment({
+    JSAny? constants,
+    String? entryPoint,
+    required GPUShaderModule module,
+    required JSArray<FragmentTarget> targets
+  });
+
+  external JSAny? get constants;
+  external String? get entryPoint;
+  external GPUShaderModule get module;
+  external JSArray<FragmentTarget> get targets;
+}
+
+extension type FragmentTarget._(JSObject _) implements JSObject {
+  external FragmentTarget({
+    required String format
+  });
+
+  external String get format;
+}
+
+extension type RenderPassDescriptor._(JSObject _) implements JSObject {
+  external RenderPassDescriptor({
+    String label,
+    required JSArray<ColorAttachment> colorAttachments
+  });
+
+  external String? get label;
+  external JSArray<ColorAttachment> get colorAttachments;
+}
+
+extension type ColorAttachment._(JSObject _) implements JSObject {
+  external ColorAttachment({
+    required String loadOp,
+    required String storeOp,
+    required GPUTexture view
+  });
+
+  external String get loadOp;
+  external String get storeOp;
+  external GPUTexture get view;
 }
