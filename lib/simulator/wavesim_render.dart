@@ -15,6 +15,23 @@ class Size {
 
 /// Interface for rendering a visual representation of the simulation state
 abstract interface class WavesimRender {
+  /// Initialize the renderer.
+  ///
+  /// [gridSize] is the size of the entire grid, while [visibleSize] is the
+  /// size of the visible portion of the grid.
+  ///
+  /// [sizeBuffer] is a buffer holding the size of the grid.
+  ///
+  /// [heatmap] and [maxHeat] are the buffers into which the heatmap and maximum
+  /// heat are written.
+  void init({
+    required Size gridSize,
+    required Size visibleSize,
+    required GPUBuffer sizeBuffer,
+    required GPUBuffer heatmap,
+    required GPUBuffer maxHeat
+  });
+
   /// Render a visual representation of the simulation state.
   ///
   /// [data] is the buffer holding the current simulation state. Implementations

@@ -115,6 +115,14 @@ class Wavesim2d {
     );
 
     _initCompute();
+
+    render.init(
+        gridSize: gridSize,
+        visibleSize: visibleSize,
+        sizeBuffer: _sizeBuffer,
+        heatmap: _heatmap,
+        maxHeat: _maxHeat
+    );
   }
 
   /// Displace a granule at a given point ([x], [y]).
