@@ -4,7 +4,7 @@ import 'dart:typed_data' as types;
 import 'package:web/web.dart';
 
 import '../webgpu/index.dart';
-import 'wavesim_render.dart';
+import 'wavesim_renderer.dart';
 
 /// 2D longitudinal wave simulator
 class Wavesim2d {
@@ -37,7 +37,7 @@ class Wavesim2d {
   final GPUShaderModule shader;
 
   /// Renderer to use for rendering the simulation
-  final WavesimRender render;
+  final WavesimRenderer renderer;
 
   /// The current simulation time
   int get time => _time;
@@ -45,7 +45,7 @@ class Wavesim2d {
   Wavesim2d({
     required this.device,
     required this.shader,
-    required this.render,
+    required this.renderer,
     required Size size,
     required this.c,
     this.maxWavelength = 1,
@@ -116,7 +116,7 @@ class Wavesim2d {
 
     _initCompute();
 
-    render.init(
+    renderer.init(
         gridSize: gridSize,
         visibleSize: visibleSize,
         sizeBuffer: _sizeBuffer,
@@ -186,7 +186,7 @@ class Wavesim2d {
 
     compute.end();
 
-    render.render(
+    renderer.render(
         encoder: encoder,
         data: _uPrev
     );

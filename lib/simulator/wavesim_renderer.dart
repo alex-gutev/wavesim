@@ -14,7 +14,7 @@ class Size {
 }
 
 /// Interface for rendering a visual representation of the simulation state
-abstract interface class WavesimRender {
+abstract interface class WavesimRenderer {
   /// Initialize the renderer.
   ///
   /// [gridSize] is the size of the entire grid, while [visibleSize] is the

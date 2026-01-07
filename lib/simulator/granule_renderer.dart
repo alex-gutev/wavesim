@@ -2,14 +2,14 @@ import 'dart:js_interop';
 import 'dart:typed_data' as types;
 import 'package:web/web.dart';
 
-import 'wavesim_render.dart';
+import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
 /// Renders a simulation as a grid of individual granules.
 ///
 /// This renderer draws each granule at its displaced position. This is suitable
 /// for small grids however is slow for large grids (larger than 100x100).
-class WaveRender implements WavesimRender {
+class GranuleRenderer implements WavesimRenderer {
   /// The GPU device
   final GPUDevice device;
 
@@ -19,7 +19,7 @@ class WaveRender implements WavesimRender {
   /// The canvas context to render to
   final GPUCanvasContext context;
 
-  WaveRender({
+  GranuleRenderer({
     required this.device,
     required this.shader,
     required this.context
