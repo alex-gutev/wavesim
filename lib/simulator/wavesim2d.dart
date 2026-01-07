@@ -9,10 +9,10 @@ import 'wavesim_render.dart';
 /// 2D longitudinal wave simulator
 class Wavesim2d {
   /// The size of the simulation grid
-  final Size gridSize;
+  late final Size gridSize;
 
   /// The size of the grid that is visible
-  late final Size visibleSize;
+  final Size visibleSize;
 
   /// Energy transfer coefficient in the range (0, 1].
   final double c;
@@ -46,14 +46,14 @@ class Wavesim2d {
     required this.device,
     required this.shader,
     required this.render,
-    required this.gridSize,
+    required Size size,
     required this.c,
     this.maxWavelength = 1,
     this.blockSize = 8,
     this.dampRegion = 30,
-  }) {
-    visibleSize = _calcVisibleSize(
-        size: gridSize,
+  }) : visibleSize = size {
+    gridSize = _calcVisibleSize(
+        size: size,
         maxWavelength: maxWavelength,
         dampRegion: dampRegion
     );
@@ -350,6 +350,8 @@ class Wavesim2d {
   /// Initialize the buffer holding the damping coefficients.
   void _initDamping() {
     final data = types.Float32List(gridSize.area);
+
+    data.fillRange(0, data.length, 1);
 
     // Assuming square grid
     final offset = (gridSize.width - visibleSize.width) / 2;
