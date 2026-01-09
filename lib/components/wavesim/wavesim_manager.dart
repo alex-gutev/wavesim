@@ -9,6 +9,7 @@ import '../../simulator/wavesim2d.dart';
 import '../../simulator/granule_renderer.dart';
 import '../../simulator/wavesim_renderer.dart';
 import '../../webgpu/index.dart';
+import 'wavesim_state.dart';
 
 /// Handles the initialization and updating of a [Wavesim2d].
 class WavesimManager extends StatefulComponent {
@@ -18,11 +19,8 @@ class WavesimManager extends StatefulComponent {
   /// Cell holding the canvas element to which, to render the simulation
   final ValueCell<HTMLCanvasElement?> canvas;
 
-  /// Cell controlling whether the simulation is paused or running
-  ///
-  /// When the cell is set to [true], the simulation is paused. When the
-  /// cell is set to [false] the simulation is resumed.
-  final ValueCell<bool> paused;
+  /// Cell controlling the state of the simulation
+  final ValueCell<WavesimState> state;
 
   /// Child component to display underneath this component
   final Component child;
@@ -33,7 +31,7 @@ class WavesimManager extends StatefulComponent {
     super.key,
     required this.device,
     required this.canvas,
-    required this.paused,
+    required this.state,
     required this.child
   });
 
@@ -84,11 +82,6 @@ class _WavesimManagerState extends State<WavesimManager> {
         c: 1
     );
 
-    _simulator!.displace(
-        x: 0, y: 0,
-        dx: 1, dy: 1
-    );
-
     await _simulator!.update();
   }
 
@@ -105,20 +98,18 @@ class _WavesimManagerState extends State<WavesimManager> {
   Component build(BuildContext context) => CellComponent.builder((context) {
     final ready = MutableCell(false);
 
-    Watch((state) async {
+    ValueCell.watch(() async {
       final canvas = component.canvas();
 
-      if (canvas != null) {
-        state.stop();
+      if (_simulator == null && canvas != null) {
         await _initSimulator(canvas);
-
         ready.value = true;
       }
     });
 
     ValueCell.watch(() {
       if (ready()) {
-        if (component.paused()) {
+        if (component.state.paused()) {
           _running = false;
         }
         else if (!_running) {

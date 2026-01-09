@@ -5,12 +5,17 @@ import 'package:web/web.dart';
 
 import '../gpu/web_gpu_check.dart';
 import '../util/ref_element.dart';
+import 'wavesim_state.dart';
 import 'wavesim_manager.dart';
 
 /// Implementation of [WavesimCanvas] for browser environments
 class WavesimCanvasImpl extends CellComponent {
+  /// Cell controlling the state of the simulator
+  final ValueCell<WavesimState> state;
+
   const WavesimCanvasImpl({
-    super.key
+    super.key,
+    required this.state
   });
 
   @override
@@ -23,7 +28,7 @@ class WavesimCanvasImpl extends CellComponent {
           return WavesimManager(
               device: device,
               canvas: element,
-              paused: paused,
+              state: state,
 
               child: RefElement(
                   onElementReady: (e) {
