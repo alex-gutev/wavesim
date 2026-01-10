@@ -20,7 +20,6 @@ class WavesimCanvasImpl extends CellComponent {
 
   @override
   Component build(BuildContext context) {
-    final paused = MutableCell(false);
     final element = MutableCell<HTMLCanvasElement?>(null);
 
     return WebGPUCheck(
