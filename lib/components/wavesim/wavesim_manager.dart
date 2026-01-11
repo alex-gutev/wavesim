@@ -82,7 +82,12 @@ class _WavesimManagerState extends State<WavesimManager> {
             height: 10
         ),
 
-        c: 1
+        c: component.state.value.c
+    );
+
+    _simulator!.displace(
+        x: 0, y: 0,
+        dx: 1, dy: 1
     );
 
     await _simulator!.update();
@@ -136,6 +141,13 @@ class _WavesimManagerState extends State<WavesimManager> {
           _run();
         }
       }
+    });
+
+    Watch((state) {
+      final c = component.state.c();
+      state.afterInit();
+
+      _simulator?.c = c;
     });
 
     return component.child;

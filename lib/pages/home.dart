@@ -58,6 +58,9 @@ class WavesimControls extends CellComponent {
           ),
           _SpeedControl(
               frameDelay: state.frameDelay
+          ),
+          _WaveSpeedControl(
+              speed: state.c
           )
         ]
     );
@@ -89,6 +92,31 @@ class _SpeedControl extends CellComponent {
           min: 0,
           max: 100,
           step: 10,
+          value: speed
+      ),
+    ]);
+  }
+}
+
+/// A slider for controlling the wave speed
+class _WaveSpeedControl extends CellComponent {
+  /// Cell holding the wave speed.
+  ///
+  /// The value of this cell is updated to reflect the user's choice.
+  final MutableCell<double> speed;
+
+  const _WaveSpeedControl({
+    required this.speed
+  });
+
+  @override
+  Component build(BuildContext context) {
+    return fragment([
+      label([text('Wave Speed (${speed()})')]),
+      Slider(
+          min: 0.1,
+          step: 0.01,
+          max: 1.0,
           value: speed
       ),
     ]);

@@ -14,9 +14,6 @@ class Wavesim2d {
   /// The size of the grid that is visible
   final Size visibleSize;
 
-  /// Energy transfer coefficient in the range (0, 1].
-  final double c;
-
   /// The maximum allowed wavelength
   ///
   /// This doesn't prevent waves with such wavelengths or longer from forming,
@@ -42,16 +39,26 @@ class Wavesim2d {
   /// The current simulation time
   int get time => _time;
 
+  /// Energy transfer coefficient in the range (0, 1].
+  double get c => _c;
+
+  set c(double value) {
+    assert((_c > 0) && (_c <= 1));
+
+    _c = value;
+    _setC(value);
+  }
+
   Wavesim2d({
     required this.device,
     required this.shader,
     required this.renderer,
     required Size size,
-    required this.c,
+    required double c,
     this.maxWavelength = 1,
     this.blockSize = 8,
     this.dampRegion = 30,
-  }) : visibleSize = size {
+  }) : visibleSize = size, _c = c {
     gridSize = _calcVisibleSize(
         size: size,
         maxWavelength: maxWavelength,
@@ -199,6 +206,9 @@ class Wavesim2d {
 
   // Private
 
+  /// Energy transfer coefficient in the range (0, 1].
+  double _c;
+
   /// Compute shader binding layout
   late final GPUBindGroupLayout _bindGroupLayout;
 
@@ -257,6 +267,14 @@ class Wavesim2d {
   ///
   /// This is also the buffer where the next simulation state is written to.
   GPUBuffer get _uPrev => _currentBuffer > 0 ? _u1 : _u2;
+
+  void _setC(double value) {
+    device.queue.writeBuffer(
+        _paramsBuffer,
+        0,
+        types.Float32List.fromList([value]).toJS
+    );
+  }
 
   /// Get the absolute X coordinate of a granule.
   ///

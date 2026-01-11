@@ -14,9 +14,13 @@ class WavesimState {
   /// successive frames is at least this duration.
   final Duration frameDelay;
 
+  /// Energy transfer coefficient in the range (0, 1].
+  final double c;
+
   const WavesimState({
     required this.paused,
-    this.frameDelay = Duration.zero
+    this.frameDelay = Duration.zero,
+    this.c = 1
   });
 
   @override
