@@ -8,8 +8,15 @@ class WavesimState {
   /// Is the simulation paused (true) or running (false).
   final bool paused;
 
+  /// The delay between successive frames.
+  ///
+  /// If this is not null, the simulation ensures that the interval between
+  /// successive frames is at least this duration.
+  final Duration frameDelay;
+
   const WavesimState({
-    required this.paused
+    required this.paused,
+    this.frameDelay = Duration.zero
   });
 
   @override

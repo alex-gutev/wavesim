@@ -47,6 +47,9 @@ class _WavesimManagerState extends State<WavesimManager> {
   /// Is the simulation running or not
   var _running = false;
 
+  /// Time (in milliseconds) of last update
+  num _lastUpdateTime = 0;
+
   // TODO: Implement dispose
 
   /// Create the simulator
@@ -86,8 +89,24 @@ class _WavesimManagerState extends State<WavesimManager> {
   }
 
   /// Run the simulation
-  void _run() async {
+  void _run([DOMHighResTimeStamp? timestamp]) async {
     await _simulator?.update();
+
+    final frameDelay = component.state.value.frameDelay.inMilliseconds;
+
+    if (timestamp != null && frameDelay > 0) {
+      final interval = timestamp - _lastUpdateTime;
+
+      if (interval < frameDelay) {
+        await Future.delayed(
+            Duration(
+                milliseconds: (frameDelay - interval).round()
+            )
+        );
+      }
+
+      _lastUpdateTime = timestamp;
+    }
 
     if (_running) {
       window.requestAnimationFrame(_run.toJS);
