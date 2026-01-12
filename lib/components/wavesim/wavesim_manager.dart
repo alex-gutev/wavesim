@@ -22,6 +22,11 @@ class WavesimManager extends StatefulComponent {
   /// Cell controlling the state of the simulation
   final ValueCell<WavesimState> state;
 
+  /// Action cell for clearing the simulation.
+  ///
+  /// When this cell is triggered, the simulation is reset to equilibrium.
+  final ValueCell<void>? clear;
+  
   /// Child component to display underneath this component
   final Component child;
 
@@ -32,7 +37,8 @@ class WavesimManager extends StatefulComponent {
     required this.device,
     required this.canvas,
     required this.state,
-    required this.child
+    required this.child,
+    this.clear
   });
 
   @override
@@ -141,6 +147,13 @@ class _WavesimManagerState extends State<WavesimManager> {
           _run();
         }
       }
+    });
+
+    Watch((state) {
+      component.clear?.observe();
+      state.afterInit();
+
+      _simulator?.clear();
     });
 
     Watch((state) {

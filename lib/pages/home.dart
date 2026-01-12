@@ -17,13 +17,17 @@ class Home extends CellComponent {
       )
     );
 
+    final clear = ActionCell();
+
     return section([
       Row(crossAxisAlignment: CrossAxisAlignment.stretch, [
         WavesimCanvas(
-            state: simState
+          state: simState,
+          clear: clear
         ),
         WavesimControls(
-            state: simState
+            state: simState,
+            clear: clear
         )
       ])
     ]);
@@ -38,8 +42,12 @@ class WavesimControls extends CellComponent {
   /// reflect the changes.
   final MutableCell<WavesimState> state;
 
+  /// Action cell for clearing the simulation
+  final ActionCell clear;
+
   const WavesimControls({
-    required this.state
+    required this.state,
+    required this.clear
   });
 
   @override
@@ -61,6 +69,9 @@ class WavesimControls extends CellComponent {
           ),
           _WaveSpeedControl(
               speed: state.c
+          ),
+          _ClearButton(
+              clear: clear
           )
         ]
     );
@@ -121,4 +132,20 @@ class _WaveSpeedControl extends CellComponent {
       ),
     ]);
   }
+}
+
+/// A button for clearing the simulation
+class _ClearButton extends StatelessComponent {
+  /// Action cell for clearing the simulation
+  final ActionCell clear;
+
+  const _ClearButton({required this.clear});
+
+  @override
+  Component build(BuildContext context) => button(
+    onClick: clear.trigger,
+    [
+      text('Clear')
+    ]
+  );
 }

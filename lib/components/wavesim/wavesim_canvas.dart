@@ -10,15 +10,22 @@ class WavesimCanvas extends StatelessComponent {
   /// Cell controlling the state of the simulator
   final ValueCell<WavesimState> state;
 
+  /// Action cell for clearing the simulation
+  ///
+  /// When this cell is triggered, the simulation is reset to equilibrium.
+  final ValueCell<void>? clear;
+
   const WavesimCanvas({
     super.key,
-    required this.state
+    required this.state,
+    this.clear
   });
 
   @override
   Component build(BuildContext context) {
     return WavesimCanvasImpl(
-      state: state
+      state: state,
+      clear: clear
     );
   }
 }

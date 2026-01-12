@@ -132,6 +132,25 @@ class Wavesim2d {
     );
   }
 
+  /// Clear the simulation.
+  ///
+  /// This resets the simulation grid to the equilibrium state.
+  void clear() {
+    final encoder = device.createCommandEncoder();
+
+    encoder.clearBuffer(_u1);
+    encoder.clearBuffer(_u2);
+    encoder.clearBuffer(_heatmap);
+    encoder.clearBuffer(_maxHeat);
+
+    renderer.render(
+        encoder: encoder,
+        data: _u1
+    );
+
+    device.queue.submit([encoder.finish()].toJS);
+  }
+
   /// Displace a granule at a given point ([x], [y]).
   ///
   /// [dx] is the magnitude of the displacement along the x-axis and [dy] is

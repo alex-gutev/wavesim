@@ -10,9 +10,13 @@ class WavesimCanvasImpl extends StatelessComponent {
   /// Cell controlling the state of the simulator
   final ValueCell<WavesimState> state;
 
+  /// Action cell for clearing the simulation
+  final ValueCell<void>? clear;
+
   const WavesimCanvasImpl({
     super.key,
-    required this.state
+    required this.state,
+    this.clear
   });
 
   @override
