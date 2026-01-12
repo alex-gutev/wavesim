@@ -72,6 +72,9 @@ class WavesimControls extends CellComponent {
           ),
           _ClearButton(
               clear: clear
+          ),
+          _GraphicsControls(
+              graphics: state.graphics
           )
         ]
     );
@@ -148,4 +151,44 @@ class _ClearButton extends StatelessComponent {
       text('Clear')
     ]
   );
+}
+
+/// Controls for selecting the type of graphics rendering to use for the simulation.
+class _GraphicsControls extends CellComponent {
+  final MutableCell<WavesimGraphics> graphics;
+
+  const _GraphicsControls({required this.graphics});
+
+  @override
+  Component build(BuildContext context) => fragment([
+    label([text('Graphics')]),
+    label([
+      input(
+        type: InputType.radio,
+        name: 'wavesim-graphics',
+        value: WavesimGraphics.blocks.name,
+
+        onChange: (e) {
+          graphics.value = WavesimGraphics.blocks;
+        },
+
+        checked: graphics.value == WavesimGraphics.blocks
+      ),
+      text('Blocks')
+    ]),
+    label([
+      input(
+          type: InputType.radio,
+          name: 'wavesim-graphics',
+          value: WavesimGraphics.heatmap.name,
+
+          onChange: (e) {
+            graphics.value = WavesimGraphics.heatmap;
+          },
+
+          checked: graphics.value == WavesimGraphics.heatmap
+      ),
+      text('Heatmap')
+    ])
+  ]);
 }
