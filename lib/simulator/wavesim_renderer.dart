@@ -32,6 +32,13 @@ abstract interface class WavesimRenderer {
     required GPUBuffer maxHeat
   });
 
+  /// Dispose resources acquired during [init].
+  ///
+  /// When this method is called, the renderer will no longer be used.
+  /// Buffers and other GPU objects created during [init] should be disposed
+  /// during this method.
+  void dispose();
+
   /// Render a visual representation of the simulation state.
   ///
   /// [data] is the buffer holding the current simulation state. Implementations

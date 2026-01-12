@@ -34,7 +34,16 @@ class Wavesim2d {
   final GPUShaderModule shader;
 
   /// Renderer to use for rendering the simulation
-  final WavesimRenderer renderer;
+  WavesimRenderer get renderer => _renderer;
+
+  set renderer(WavesimRenderer renderer) {
+    final oldRenderer = _renderer;
+
+    _renderer = renderer;
+
+    _initRenderer();
+    _disposeRenderer(oldRenderer);
+  }
 
   /// The current simulation time
   int get time => _time;
@@ -52,13 +61,13 @@ class Wavesim2d {
   Wavesim2d({
     required this.device,
     required this.shader,
-    required this.renderer,
+    required WavesimRenderer renderer,
     required Size size,
     required double c,
     this.maxWavelength = 1,
     this.blockSize = 8,
     this.dampRegion = 30,
-  }) : visibleSize = size, _c = c {
+  }) : _renderer = renderer, visibleSize = size, _c = c {
     gridSize = _calcVisibleSize(
         size: size,
         maxWavelength: maxWavelength,
@@ -122,14 +131,7 @@ class Wavesim2d {
     );
 
     _initCompute();
-
-    renderer.init(
-        gridSize: gridSize,
-        visibleSize: visibleSize,
-        sizeBuffer: _sizeBuffer,
-        heatmap: _heatmap,
-        maxHeat: _maxHeat
-    );
+    _initRenderer();
   }
 
   /// Clear the simulation.
@@ -143,7 +145,7 @@ class Wavesim2d {
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
 
-    renderer.render(
+    _renderer.render(
         encoder: encoder,
         data: _u1
     );
@@ -212,7 +214,7 @@ class Wavesim2d {
 
     compute.end();
 
-    renderer.render(
+    _renderer.render(
         encoder: encoder,
         data: _uPrev
     );
@@ -227,6 +229,9 @@ class Wavesim2d {
 
   /// Energy transfer coefficient in the range (0, 1].
   double _c;
+
+  /// Renderer to use for rendering the simulation
+  WavesimRenderer _renderer;
 
   /// Compute shader binding layout
   late final GPUBindGroupLayout _bindGroupLayout;
@@ -377,6 +382,16 @@ class Wavesim2d {
 
     _time = 0;
     _currentBuffer = 0;
+  }
+
+  void _initRenderer() {
+    _renderer.init(
+        gridSize: gridSize,
+        visibleSize: visibleSize,
+        sizeBuffer: _sizeBuffer,
+        heatmap: _heatmap,
+        maxHeat: _maxHeat
+    );
   }
 
   /// Create a buffer for holding the simulation state.
@@ -537,4 +552,14 @@ class Wavesim2d {
             ].toJS
         )
       );
+
+  /// Call dispose on a given [renderer].
+  ///
+  /// This method takes care to dispose the [renderer] after all work on the
+  /// GPU queue has completed, in order to be sure that the renderer wont be
+  /// used again.
+  Future<void> _disposeRenderer(WavesimRenderer renderer) async {
+    await device.queue.onSubmittedWorkDone().toDart;
+    renderer.dispose();
+  }
 }

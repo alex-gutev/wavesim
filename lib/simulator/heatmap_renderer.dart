@@ -174,6 +174,12 @@ class HeatmapRenderer implements WavesimRenderer {
   }
 
   @override
+  void dispose() {
+    _vertBuffer.destroy();
+    _heatBuffer.destroy();
+  }
+
+  @override
   void render({required GPUCommandEncoder encoder, required GPUBuffer data}) {
     final view = context.getCurrentTexture();
 
