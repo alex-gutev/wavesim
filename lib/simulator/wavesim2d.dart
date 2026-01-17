@@ -108,6 +108,20 @@ class Wavesim2d {
                   type: 'storage'
               )
           ),
+          BindEntry(
+              binding: 7,
+              visibility: $GPUShaderStage.COMPUTE,
+              buffer: BufferLayout(
+                  type: 'read-only-storage'
+              )
+          ),
+          BindEntry(
+              binding: 8,
+              visibility: $GPUShaderStage.COMPUTE,
+              buffer: BufferLayout(
+                  type: 'read-only-storage'
+              )
+          ),
         ].toJS
       )
     );
@@ -126,6 +140,9 @@ class Wavesim2d {
     encoder.clearBuffer(_u2);
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
+
+    encoder.clearBuffer(_hBound);
+    encoder.clearBuffer(_vBound);
 
     _renderer.render(
         encoder: encoder,
@@ -240,6 +257,12 @@ class Wavesim2d {
   /// Buffer into which the maximum heat is written
   late final GPUBuffer _maxHeat;
 
+  /// Buffer holding horizontal boundary values
+  late final GPUBuffer _hBound;
+
+  /// Buffer holding vertical boundary values
+  late final GPUBuffer _vBound;
+
   /// First bind group.
   ///
   /// This binds [_u1] as the current state buffer and [_u2] as the previous
@@ -321,6 +344,7 @@ class Wavesim2d {
     _u2 = _makePosBuffer();
 
     _initDamping();
+    _initBoundary();
     _initHeatmap();
 
     _bindGroup1 = _makeBindGroup(_u1, _u2);
@@ -371,6 +395,19 @@ class Wavesim2d {
         usage: $GPUBufferUsage.STORAGE |
           $GPUBufferUsage.VERTEX |
           $GPUBufferUsage.COPY_DST
+    );
+  }
+
+  /// Initialize the buffers for computing the boundary values
+  void _initBoundary() {
+    _hBound = _makeFloat32Buffer(
+      types.Float32List(size * 2 * 2),
+      usage: $GPUBufferUsage.STORAGE
+    );
+
+    _vBound = _makeFloat32Buffer(
+        types.Float32List(size * 2 * 2),
+        usage: $GPUBufferUsage.STORAGE
     );
   }
 
@@ -466,6 +503,18 @@ class Wavesim2d {
                   binding: 6,
                   resource: GPUBufferBinding(
                       buffer: _maxHeat
+                  )
+              ),
+              BindGroupEntry(
+                  binding: 7,
+                  resource: GPUBufferBinding(
+                      buffer: _hBound
+                  )
+              ),
+              BindGroupEntry(
+                  binding: 8,
+                  resource: GPUBufferBinding(
+                      buffer: _vBound
                   )
               ),
             ].toJS

@@ -1,11 +1,14 @@
-@binding(0) @group(0) var<uniform> size: vec2u;
-@binding(1) @group(0) var<uniform> c: f32;
-@binding(2) @group(0) var<storage, read> d: array<f32>;
-@binding(3) @group(0) var<storage, read> u: array<f32>;
-@binding(4) @group(0) var<storage, read_write> up: array<f32>;
+@group(0) @binding(0) var<uniform> size: vec2u;
+@group(0) @binding(1) var<uniform> c: f32;
+@group(0) @binding(2) var<storage, read> d: array<f32>;
+@group(0) @binding(3) var<storage, read> u: array<f32>;
+@group(0) @binding(4) var<storage, read_write> up: array<f32>;
 
-@binding(5) @group(0) var<storage, read_write> heatmap: array<atomic<u32>>;
-@binding(6) @group(0) var<storage, read_write> maxHeat: atomic<u32>;
+@group(0) @binding(5) var<storage, read_write> heatmap: array<atomic<u32>>;
+@group(0) @binding(6) var<storage, read_write> maxHeat: atomic<u32>;
+
+@group(0) @binding(7) var<storage, read> hBound : array<vec4f>;
+@group(0) @binding(8) var<storage, read> vBound : array<vec4f>;
 
 override blockSize = 8;
 
@@ -61,11 +64,11 @@ fn main(@builtin(global_invocation_id) grid: vec3u) {
 
   let p = pos(x,y);
 
-  let l = select(vec2f(0,0), pos(x-1, y), x > 0);
-  let t = select(vec2f(0,0), pos(x, y-1), y > 0);
+  let l = select(hBound[y].xy, pos(x - 1, y), x > 0);
+  let t = select(vBound[x].xy, pos(x, y - 1), y > 0);
 
-  let r = select(vec2f(0,0), pos(x+1, y), x < size.x-1);
-  let b = select(vec2f(0,0), pos(x, y+1), y < size.y-1);
+  let r = select(hBound[y].zw, pos(x+1, y), x < size.x - 1);
+  let b = select(vBound[x].zw, pos(x, y+1), y < size.y - 1);
 
   let f = -4 * p + l + t + r + b;
 
