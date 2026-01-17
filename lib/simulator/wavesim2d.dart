@@ -5,6 +5,7 @@ import 'package:web/web.dart';
 
 import '../webgpu/index.dart';
 import 'wavesim_renderer.dart';
+import 'open_boundary_simulator.dart';
 
 /// 2D longitudinal wave simulator
 class Wavesim2d {
@@ -141,8 +142,8 @@ class Wavesim2d {
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
 
-    encoder.clearBuffer(_hBound);
-    encoder.clearBuffer(_vBound);
+    encoder.clearBuffer(_hEdge);
+    encoder.clearBuffer(_vEdge);
 
     _renderer.render(
         encoder: encoder,
@@ -201,6 +202,8 @@ class Wavesim2d {
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
 
+    _edgeSim.addTo(encoder);
+    
     final compute = encoder.beginComputePass();
 
     compute.setPipeline(_computePipeline);
@@ -258,10 +261,16 @@ class Wavesim2d {
   late final GPUBuffer _maxHeat;
 
   /// Buffer holding horizontal boundary values
-  late final GPUBuffer _hBound;
+  late final GPUBuffer _hEdge;
 
   /// Buffer holding vertical boundary values
-  late final GPUBuffer _vBound;
+  late final GPUBuffer _vEdge;
+
+  /// Buffer holding the coefficients for computing the boundary values
+  late final GPUBuffer _edgeFactors;
+
+  /// Open boundary simulator
+  late final OpenBoundarySimulator _edgeSim;
 
   /// First bind group.
   ///
@@ -325,6 +334,7 @@ class Wavesim2d {
         ),
         compute: ComputeDescriptor(
           module: shader,
+          entryPoint: 'main',
           constants: {
             'blockSize': blockSize
           }.jsify()
@@ -400,15 +410,75 @@ class Wavesim2d {
 
   /// Initialize the buffers for computing the boundary values
   void _initBoundary() {
-    _hBound = _makeFloat32Buffer(
+    _hEdge = _makeFloat32Buffer(
       types.Float32List(size * 2 * 2),
-      usage: $GPUBufferUsage.STORAGE
+      usage: $GPUBufferUsage.STORAGE |
+        $GPUBufferUsage.COPY_DST
     );
 
-    _vBound = _makeFloat32Buffer(
+    _vEdge = _makeFloat32Buffer(
         types.Float32List(size * 2 * 2),
-        usage: $GPUBufferUsage.STORAGE
+        usage: $GPUBufferUsage.STORAGE |
+          $GPUBufferUsage.COPY_DST
     );
+
+    _edgeFactors = _makeFloat32Buffer(
+        _calcEdgeFactors(size, c),
+        usage: $GPUBufferUsage.STORAGE |
+          $GPUBufferUsage.COPY_DST
+    );
+
+    _edgeSim = OpenBoundarySimulator(
+        device: device,
+        shader: shader,
+        size: size,
+        blockSize: blockSize,
+        sizeBuffer: _sizeBuffer,
+        edgeFactors: _edgeFactors,
+        edgeValues: _hEdge,
+        u1: _u1,
+        u2: _u2
+    );
+  }
+
+  /// Calculate the boundary coefficients for a given grid [size] and wave speed [c].
+  static types.Float32List _calcEdgeFactors(int size, double c) {
+    final data = types.Float32List((2 * size - 1) * size);
+    final cache = <(int,int,int), double>{};
+
+    double calc(int x, int y, int tn) =>
+        cache.putIfAbsent((x, y, tn), () {
+          if (x == 0 && y == 0 && tn == 0) {
+            return 1;
+          }
+          else if ((x == 0 && tn != 0) || tn < 0) {
+            return 0;
+          }
+
+          final tprev = tn - 1;
+
+          final l = calc(x - 1, y, tprev);
+          final r = calc(x + 1, y, tprev);
+          final t = calc(x, y - 1, tprev);
+          final b = calc(x, y + 1, tprev);
+
+          final u = calc(x, y, tprev);
+          final a = c * (l + r + t + b - 4 * u) / 4;
+          final v = u - calc(x, y, tn - 2);
+
+          return u + v + a;
+        });
+
+    for (var y = 0; y < size; y++) {
+      for (var t = 0; t < size; t++) {
+        final c = calc(1, y, t+1);
+
+        data[(size - 1 + y)*size + t] = c;
+        data[(size - 1 - y)*size + t] = c;
+      }
+    }
+
+    return data;
   }
 
   /// Create a uint32 buffer initialized with [data].
@@ -508,13 +578,13 @@ class Wavesim2d {
               BindGroupEntry(
                   binding: 7,
                   resource: GPUBufferBinding(
-                      buffer: _hBound
+                      buffer: _hEdge
                   )
               ),
               BindGroupEntry(
                   binding: 8,
                   resource: GPUBufferBinding(
-                      buffer: _vBound
+                      buffer: _vEdge
                   )
               ),
             ].toJS

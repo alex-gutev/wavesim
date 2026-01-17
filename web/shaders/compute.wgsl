@@ -7,11 +7,12 @@
 @group(0) @binding(5) var<storage, read_write> heatmap: array<atomic<u32>>;
 @group(0) @binding(6) var<storage, read_write> maxHeat: atomic<u32>;
 
-@group(0) @binding(7) var<storage, read> hBound : array<vec4f>;
-@group(0) @binding(8) var<storage, read> vBound : array<vec4f>;
+@group(0) @binding(7) var<storage, read> hEdge : array<vec4f>;
+@group(0) @binding(8) var<storage, read> vEdge : array<vec4f>;
 
 override blockSize = 8;
 
+// Compute the index corresponding to the given `x` and `y` coordinates
 fn getIndex(x: u32, y: u32) -> u32 {
   let h = size.y;
   let w = size.x;
@@ -19,11 +20,13 @@ fn getIndex(x: u32, y: u32) -> u32 {
   return (y % h) * w + (x % w);
 }
 
+// Get the displacement of the granule at (x,y)
 fn pos(x: u32, y: u32) -> vec2f {
   let index = getIndex(x,y) * 2;
   return vec2f(u[index], u[index+1]);
 }
 
+// Get the velocity of the granule at (x,y)
 fn vel(x: u32, y: u32) -> vec2f {
   let index = getIndex(x,y) * 2;
   
@@ -33,10 +36,12 @@ fn vel(x: u32, y: u32) -> vec2f {
   );
 }
 
+// Get the damping coefficient for the granule at (x,y)
 fn damp(x: u32, y: u32) -> f32 {
   return d[getIndex(x,y)];
 }
 
+// Set the displacement (up) of the granule at (x,y) to `pos`
 fn setPos(x: u32, y: u32, pos: vec2f) {
   let index = getIndex(x,y) * 2;
 
@@ -64,11 +69,11 @@ fn main(@builtin(global_invocation_id) grid: vec3u) {
 
   let p = pos(x,y);
 
-  let l = select(hBound[y].xy, pos(x - 1, y), x > 0);
-  let t = select(vBound[x].xy, pos(x, y - 1), y > 0);
+  let l = select(hEdge[y].xy, pos(x - 1, y), x > 0);
+  let t = select(vEdge[x].xy, pos(x, y - 1), y > 0);
 
-  let r = select(hBound[y].zw, pos(x+1, y), x < size.x - 1);
-  let b = select(vBound[x].zw, pos(x, y+1), y < size.y - 1);
+  let r = select(hEdge[y].zw, pos(x+1, y), x < size.x - 1);
+  let b = select(vEdge[x].zw, pos(x, y+1), y < size.y - 1);
 
   let f = -4 * p + l + t + r + b;
 
@@ -84,4 +89,57 @@ fn main(@builtin(global_invocation_id) grid: vec3u) {
 fn clampTanh(x: vec2f) -> vec2f {
     let clamped_x = clamp(x, vec2f(-20.0, -20.0), vec2f(20.0, 20.0));
     return tanh(clamped_x);
+}
+
+// Boundary value computation
+
+@group(1) @binding(0) var<storage, read> edgeFactors : array<f32>;
+@group(1) @binding(1) var<storage, read> prevEdgeIn : array<vec4f>;
+@group(1) @binding(2) var<storage, read_write> prevEdgeOut : array<vec4f>;
+@group(1) @binding(3) var<storage, read_write> edgeOut : array<vec4f>;
+
+// Compute the displacement of the granules at the boundaries
+@compute @workgroup_size(blockSize)
+fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
+    let i = id.x;
+    let n = size.x;
+
+    if (i > n) {
+        return;
+    }
+
+    var edge = vec4f(0, 0, 0, 0);
+
+    for (var y : u32 = 0; y < n; y++) {
+        for (var x : u32 = 0; x < n; x++) {
+            let f = edgeFactors[(n - i - 1 + y) * n + x];
+            edge += f * prevEdgeIn[y * n + x];
+        }
+    }
+
+    edgeOut[i] = edge;
+}
+
+// Shift the previous edge displacements by one to the right
+//
+// Reads from prevEdgeIn and writes to prevEdgeOut
+@compute @workgroup_size(blockSize, blockSize)
+fn shiftPrevEdges(@builtin(global_invocation_id) grid: vec3u) {
+    let x = grid.x;
+    let t = grid.y;
+    let n = size.x;
+
+    if (x >=n || t >= n) {
+        return;
+    }
+
+    if (t == 0) {
+        prevEdgeOut[x * n] = vec4f(
+            pos(0, x),
+            pos(n - 1, x)
+        );
+    }
+    else {
+        prevEdgeOut[x * n + t] = prevEdgeIn[x * n + (t - 1)];
+    }
 }
