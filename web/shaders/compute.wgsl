@@ -67,7 +67,7 @@ fn main(@builtin(global_invocation_id) grid: vec3u) {
   let r = select(vec2f(0,0), pos(x+1, y), x < size.x-1);
   let b = select(vec2f(0,0), pos(x, y+1), y < size.y-1);
 
-  let f = clampTanh(-4 * p + l + t + r + b);
+  let f = -4 * p + l + t + r + b;
 
   let nextV = vel(x,y) + c * f / 4;
   let nextP = p + nextV;
