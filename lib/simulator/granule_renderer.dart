@@ -44,20 +44,6 @@ class GranuleRenderer implements WavesimRenderer {
                   type: 'uniform'
               )
           ),
-          BindEntry(
-              binding: 1,
-              visibility: $GPUShaderStage.VERTEX,
-              buffer: BufferLayout(
-                  type: 'uniform'
-              )
-          ),
-          BindEntry(
-              binding: 2,
-              visibility: $GPUShaderStage.VERTEX,
-              buffer: BufferLayout(
-                  type: 'uniform'
-              )
-          ),
         ].toJS
       )
     );
@@ -65,23 +51,12 @@ class GranuleRenderer implements WavesimRenderer {
 
   @override
   void init({
-    required Size gridSize,
-    required Size visibleSize,
+    required int size,
     required GPUBuffer sizeBuffer,
     required GPUBuffer heatmap,
     required GPUBuffer maxHeat
   }) {
-    _gridSize = gridSize;
-    _visibleSize = visibleSize;
-
-    _visibleSizeBuffer = _makeSizeBuffer(visibleSize);
-
-    _visibleOffsetBuffer = _makeSizeBuffer(
-      Size(
-          width: (gridSize.width - visibleSize.width) ~/ 2,
-          height: (gridSize.height - visibleSize.height) ~/ 2
-      )
-    );
+    _size = size;
 
     final vertBuffer = _initVertices();
     
@@ -135,18 +110,6 @@ class GranuleRenderer implements WavesimRenderer {
                   buffer: sizeBuffer,
                 )
             ),
-            BindGroupEntry(
-                binding: 1,
-                resource: GPUBufferBinding(
-                  buffer: _visibleSizeBuffer,
-                )
-            ),
-            BindGroupEntry(
-                binding: 2,
-                resource: GPUBufferBinding(
-                  buffer: _visibleOffsetBuffer,
-                )
-            ),
           ].toJS
       )
     );
@@ -155,8 +118,6 @@ class GranuleRenderer implements WavesimRenderer {
   @override
   void dispose() {
     _vertBuffer.destroy();
-    _visibleSizeBuffer.destroy();
-    _visibleOffsetBuffer.destroy();
   }
 
   @override
@@ -182,7 +143,7 @@ class GranuleRenderer implements WavesimRenderer {
     render.setVertexBuffer(0, data);
     render.setVertexBuffer(1, _vertBuffer);
     render.setBindGroup(0, _uniformBindGroup);
-    render.draw(4, _gridSize.area);
+    render.draw(4, _size * _size);
     render.end();
   }
 
@@ -194,17 +155,8 @@ class GranuleRenderer implements WavesimRenderer {
   /// Vertex and fragment shader bind group layout
   late final GPUBindGroupLayout _bindGroupLayout;
 
-  /// The size of the entire grid
-  late final Size _gridSize;
-
-  /// The size of the grid that is visible
-  late final Size _visibleSize;
-
-  /// Buffer holding the size of the visible grid
-  late final GPUBuffer _visibleSizeBuffer;
-
-  /// Buffer holding the X and Y offsets to the visible grid
-  late final GPUBuffer _visibleOffsetBuffer;
+  /// The size of the grid
+  late final int _size;
 
   /// Buffer holding the vertex positions
   late final GPUBuffer _vertBuffer;
@@ -214,17 +166,6 @@ class GranuleRenderer implements WavesimRenderer {
 
   /// Bind group for the uniform variables
   late final GPUBindGroup _uniformBindGroup;
-
-  /// Create a GPU buffer holding the width and height of a given [size].
-  GPUBuffer _makeSizeBuffer(Size size) {
-    return device.makeUint32Buffer(
-        data: types.Uint32List.fromList([size.width, size.height]),
-        usage: $GPUBufferUsage.STORAGE |
-          $GPUBufferUsage.UNIFORM |
-          $GPUBufferUsage.COPY_DST |
-          $GPUBufferUsage.VERTEX
-    );
-  }
 
   /// Create the buffer holding the positions of the vertices.
   ///

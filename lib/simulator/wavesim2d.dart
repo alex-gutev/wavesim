@@ -8,24 +8,11 @@ import 'wavesim_renderer.dart';
 
 /// 2D longitudinal wave simulator
 class Wavesim2d {
-  /// The size of the simulation grid
-  late final Size gridSize;
-
-  /// The size of the grid that is visible
-  final Size visibleSize;
-
-  /// The maximum allowed wavelength
-  ///
-  /// This doesn't prevent waves with such wavelengths or longer from forming,
-  /// however these waves wont be absorbed by the damping boundary and will end
-  /// up being reflected back towards the visible grid.
-  final double maxWavelength;
+  /// The size of the grid.
+  final int size;
 
   /// GPU computation block size
   final int blockSize;
-
-  /// Size of the damping boundary
-  final int dampRegion;
 
   /// The GPU device
   final GPUDevice device;
@@ -58,22 +45,17 @@ class Wavesim2d {
     _setC(value);
   }
 
+  /// The number of granules in the grid
+  int get area => size * size;
+
   Wavesim2d({
     required this.device,
     required this.shader,
     required WavesimRenderer renderer,
-    required Size size,
+    required this.size,
     required double c,
-    this.maxWavelength = 1,
     this.blockSize = 8,
-    this.dampRegion = 30,
-  }) : _renderer = renderer, visibleSize = size, _c = c {
-    gridSize = _calcVisibleSize(
-        size: size,
-        maxWavelength: maxWavelength,
-        dampRegion: dampRegion
-    );
-
+  }) : _renderer = renderer, _c = c {
     _bindGroupLayout = device.createBindGroupLayout(
       BindGroupLayoutDescriptor(
         entries: <BindEntry>[
@@ -206,11 +188,9 @@ class Wavesim2d {
 
     compute.setPipeline(_computePipeline);
     compute.setBindGroup(0, bindGroup);
-    
-    compute.dispatchWorkgroups(
-        (gridSize.width / blockSize).ceil(),
-        (gridSize.height / blockSize).ceil()
-    );
+
+    final nWorkgroups = (size / blockSize).ceil();
+    compute.dispatchWorkgroups(nWorkgroups, nWorkgroups);
 
     compute.end();
 
@@ -278,12 +258,6 @@ class Wavesim2d {
   /// The currently bound simulation state buffer.
   var _currentBuffer = 0;
 
-  /// Offset to the left edge of the visible grid
-  int get _offsetX => (gridSize.width - visibleSize.width) ~/ 2;
-
-  /// Offset to the top edge of the visible grid
-  int get _offsetY => (gridSize.height - visibleSize.height) ~/ 2;
-
   /// The buffer holding the current simulation state
   GPUBuffer get _uCurrent => _currentBuffer > 0 ? _u2 : _u1;
 
@@ -302,46 +276,21 @@ class Wavesim2d {
 
   /// Get the absolute X coordinate of a granule.
   ///
-  /// [x] is the X coordinate of the granule relative to the visible grid.
   /// If [x] is less than zero it is interpreted relative to the right edge
-  /// of the visible grid.
-  int _xIndex(int x) {
-    if (x < 0) {
-      x += visibleSize.width;
-    }
-
-    return x + _offsetX;
-  }
+  /// of the grid.
+  int _xIndex(int x) => x < 0 ? x + size : x;
 
   /// Get the absolute Y coordinate of a granule.
   ///
-  /// [y] is the Y coordinate of the granule relative to the visible grid.
   /// If [y] is less than zero it is interpreted relative to the bottom edge
   /// of the visible grid.
-  int _yIndex(int y) {
-    if (y < 0) {
-      y += visibleSize.height;
-    }
-
-    return y + _offsetY;
-  }
+  int _yIndex(int y) => y < 0 ? y + size : y;
 
   /// Get the index of the buffer element holding the state of a granule.
   ///
-  /// [x] and [y] are the x and y coordinates of the granule relative to the
-  /// visible grid. A negative [x]/[y] is interpreted relative to the right /
+  /// A negative [x]/[y] is interpreted relative to the right /
   /// bottom edge of the visible grid.
-  int _index(int x, int y) =>
-      2 * (_yIndex(y) * gridSize.width + _xIndex(x));
-
-  static Size _calcVisibleSize({
-    required Size size,
-    required double maxWavelength,
-    required int dampRegion
-  }) => Size(
-      width: (size.width + maxWavelength * dampRegion).ceil(),
-      height: (size.height + maxWavelength * dampRegion).ceil()
-  );
+  int _index(int x, int y) => 2 * (_yIndex(y) * size + _xIndex(x));
 
   void _initCompute() {
     _computePipeline = device.createComputePipeline(
@@ -361,10 +310,7 @@ class Wavesim2d {
     );
 
     _sizeBuffer = _makeUInt32Buffer(
-        types.Uint32List.fromList([
-          gridSize.width,
-          gridSize.height
-        ])
+        types.Uint32List.fromList([size, size])
     );
 
     _paramsBuffer = _makeFloat32Buffer(
@@ -386,8 +332,7 @@ class Wavesim2d {
 
   void _initRenderer() {
     _renderer.init(
-        gridSize: gridSize,
-        visibleSize: visibleSize,
+        size: size,
         sizeBuffer: _sizeBuffer,
         heatmap: _heatmap,
         maxHeat: _maxHeat
@@ -395,53 +340,27 @@ class Wavesim2d {
   }
 
   /// Create a buffer for holding the simulation state.
-  GPUBuffer _makePosBuffer() {
-    final nCells = gridSize.area;
-    final nElems = nCells * 2;
-
-    return _makeFloat32Buffer(types.Float32List(nElems),
-      usage: $GPUBufferUsage.STORAGE |
-        $GPUBufferUsage.VERTEX |
-        $GPUBufferUsage.COPY_DST |
-        $GPUBufferUsage.COPY_SRC,
-    );
-  }
+  GPUBuffer _makePosBuffer() => _makeFloat32Buffer(
+    types.Float32List(2 * area),
+    usage: $GPUBufferUsage.STORAGE |
+      $GPUBufferUsage.VERTEX |
+      $GPUBufferUsage.COPY_DST |
+      $GPUBufferUsage.COPY_SRC,
+  );
 
   /// Initialize the buffer holding the damping coefficients.
   void _initDamping() {
-    final data = types.Float32List(gridSize.area);
-
-    data.fillRange(0, data.length, 1);
-
-    // Assuming square grid
-    final offset = (gridSize.width - visibleSize.width) / 2;
-
-    for (var i = 0; i < offset; i++) {
-      final damp = 1 - (0.01 / maxWavelength) * (offset - i) / maxWavelength;
-
-      final t = i * gridSize.width;
-      final b = (gridSize.height - i - 1) * gridSize.width;
-      final r = gridSize.width - i - 1;
-
-      for (var j = i; j < gridSize.width; j++) {
-        data[t+j] = damp;
-        data[b+j] = damp;
-
-        data[j * gridSize.width + i] = damp;
-        data[j * gridSize.width + r] = damp;
-      }
-    }
-
-     _damping = _makeFloat32Buffer(data,
-        usage: $GPUBufferUsage.STORAGE |
-            $GPUBufferUsage.UNIFORM,
+     _damping = _makeFloat32Buffer(
+       types.Float32List(area)..fillRange(0, area, 1),
+       usage: $GPUBufferUsage.STORAGE |
+        $GPUBufferUsage.UNIFORM,
      );
   }
 
   /// Create the buffers for holding the heat map and maximum heat
   void _initHeatmap() {
     _heatmap = _makeUInt32Buffer(
-        types.Uint32List(gridSize.area),
+        types.Uint32List(area),
         usage: $GPUBufferUsage.STORAGE |
           $GPUBufferUsage.VERTEX |
           $GPUBufferUsage.COPY_DST

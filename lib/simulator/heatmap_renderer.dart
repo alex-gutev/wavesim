@@ -61,15 +61,11 @@ class HeatmapRenderer implements WavesimRenderer {
 
   @override
   void init({
-    required Size gridSize,
-    required Size visibleSize,
+    required int size,
     required GPUBuffer sizeBuffer,
     required GPUBuffer heatmap,
     required GPUBuffer maxHeat
   }) {
-    _gridSize = gridSize;
-    _visibleSize = visibleSize;
-
     _vertBuffer = device.makeFloat32Buffer(
         data: types.Float32List.fromList([
           -1, -1,
@@ -93,15 +89,12 @@ class HeatmapRenderer implements WavesimRenderer {
         ].toJS
     );
 
-    final xOffset = (gridSize.width - visibleSize.width) ~/ 2;
-    final yOffset = (gridSize.height - visibleSize.height) ~/ 2;
-
     _heatBuffer = device.makeUint32Buffer(
         data: types.Uint32List.fromList([
-          xOffset, yOffset,
-          xOffset, yOffset + visibleSize.height,
-          xOffset + visibleSize.width, yOffset,
-          xOffset + visibleSize.width, yOffset + visibleSize.height
+          0, 0,
+          0, size,
+          size, 0,
+          size, size
         ]),
 
         usage: $GPUBufferUsage.VERTEX
@@ -210,12 +203,6 @@ class HeatmapRenderer implements WavesimRenderer {
 
   /// Vertex and fragment shader bind group layout
   late final GPUBindGroupLayout _bindGroupLayout;
-
-  /// The size of the entire grid
-  late final Size _gridSize;
-
-  /// The size of the grid that is visible
-  late final Size _visibleSize;
 
   /// Buffer holding the vertex positions
   late final GPUBuffer _vertBuffer;

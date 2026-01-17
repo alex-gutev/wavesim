@@ -82,11 +82,7 @@ class _WavesimManagerState extends State<WavesimManager> {
             canvas: canvas
         ),
 
-        size: Size(
-            width: 10,
-            height: 10
-        ),
-
+        size: 10,
         c: component.state.value.c
     );
 

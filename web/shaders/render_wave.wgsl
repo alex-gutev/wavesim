@@ -4,24 +4,18 @@ struct Out {
 }
 
 @binding(0) @group(0) var<uniform> size: vec2u;
-@binding(1) @group(0) var<uniform> visibleSize: vec2u;
-@binding(2) @group(0) var<uniform> offset: vec2u;
 
 @vertex
 fn vert_main(@builtin(instance_index) i: u32, @location(0) u: vec2f, @location(1) pos: vec2u) -> Out {
-    let w = visibleSize.x;
-    let h = visibleSize.y;
+    let w = size.x;
+    let h = size.y;
 
     let side = f32(max(w, h));
     let bw = 2 / f32(w);
     let bh = 2 / f32(h);
 
-    let qx = i % size.x - offset.x;
-    let qy = i / size.y - offset.y;
-
-    if ((qx < 0 || qx > w) || (qy < 0 || qy > h)) {
-      return Out(vec4f(-2, -2, 0., 1), 1.0);
-    }
+    let qx = i % w;
+    let qy = i / h;
 
     let l = f32(qx) * bw;
     let vx = (f32(pos.x) - 0.5) * 0.7 + 0.5;
