@@ -291,6 +291,12 @@ class Wavesim2d {
 
   void _setC(double value) {
     device.queue.writeBuffer(
+        _edgeFactors,
+        0,
+        _calcEdgeFactors(size, value).toJS
+    );
+
+    device.queue.writeBuffer(
         _paramsBuffer,
         0,
         types.Float32List.fromList([value]).toJS

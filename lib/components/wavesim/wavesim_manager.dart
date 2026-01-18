@@ -31,8 +31,6 @@ class WavesimManager extends StatefulComponent {
   /// Child component to display underneath this component
   final Component child;
 
-  // TODO: Extract simulation parameters
-
   const WavesimManager({
     super.key,
     required this.device,
@@ -48,6 +46,8 @@ class WavesimManager extends StatefulComponent {
 }
 
 class _WavesimManagerState extends State<WavesimManager> {
+  static const debounceDelay = Duration(milliseconds: 300);
+
   /// The simulator
   Wavesim2d? _simulator;
 
@@ -187,7 +187,12 @@ class _WavesimManagerState extends State<WavesimManager> {
     });
 
     Watch((state) {
-      final c = component.state.c();
+      // TODO: Ensure this doesn't cause an initial delay
+      final c = component.state.c
+        .delayed(debounceDelay)
+        .waitLast
+        .whenReady();
+
       state.afterInit();
 
       _simulator?.c = c;
