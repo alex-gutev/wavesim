@@ -106,7 +106,7 @@ class OpenBoundarySimulator {
 
   /// Create the required GPU buffers
   void _initBuffers() {
-    final data = types.Float32List(4 * size * size);
+    final data = types.Float32List(2 * 4 * size * size);
 
     _prevEdgeValues1 = device.makeFloat32Buffer(
         data: data,

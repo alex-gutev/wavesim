@@ -116,13 +116,6 @@ class Wavesim2d {
                   type: 'read-only-storage'
               )
           ),
-          BindEntry(
-              binding: 8,
-              visibility: $GPUShaderStage.COMPUTE,
-              buffer: BufferLayout(
-                  type: 'read-only-storage'
-              )
-          ),
         ].toJS
       )
     );
@@ -141,9 +134,7 @@ class Wavesim2d {
     encoder.clearBuffer(_u2);
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
-
-    encoder.clearBuffer(_hEdge);
-    encoder.clearBuffer(_vEdge);
+    encoder.clearBuffer(_edge);
 
     _renderer.render(
         encoder: encoder,
@@ -260,11 +251,11 @@ class Wavesim2d {
   /// Buffer into which the maximum heat is written
   late final GPUBuffer _maxHeat;
 
-  /// Buffer holding horizontal boundary values
-  late final GPUBuffer _hEdge;
-
-  /// Buffer holding vertical boundary values
-  late final GPUBuffer _vEdge;
+  /// Buffer holding the boundary values
+  ///
+  /// This buffer holds the values at left and right boundaries followed by the
+  /// values at the top and bottom boundaries.
+  late final GPUBuffer _edge;
 
   /// Buffer holding the coefficients for computing the boundary values
   late final GPUBuffer _edgeFactors;
@@ -410,16 +401,10 @@ class Wavesim2d {
 
   /// Initialize the buffers for computing the boundary values
   void _initBoundary() {
-    _hEdge = _makeFloat32Buffer(
-      types.Float32List(size * 2 * 2),
+    _edge = _makeFloat32Buffer(
+      types.Float32List(2 * size * 4),
       usage: $GPUBufferUsage.STORAGE |
         $GPUBufferUsage.COPY_DST
-    );
-
-    _vEdge = _makeFloat32Buffer(
-        types.Float32List(size * 2 * 2),
-        usage: $GPUBufferUsage.STORAGE |
-          $GPUBufferUsage.COPY_DST
     );
 
     _edgeFactors = _makeFloat32Buffer(
@@ -435,7 +420,7 @@ class Wavesim2d {
         blockSize: blockSize,
         sizeBuffer: _sizeBuffer,
         edgeFactors: _edgeFactors,
-        edgeValues: _hEdge,
+        edgeValues: _edge,
         u1: _u1,
         u2: _u2
     );
@@ -578,13 +563,7 @@ class Wavesim2d {
               BindGroupEntry(
                   binding: 7,
                   resource: GPUBufferBinding(
-                      buffer: _hEdge
-                  )
-              ),
-              BindGroupEntry(
-                  binding: 8,
-                  resource: GPUBufferBinding(
-                      buffer: _vEdge
+                      buffer: _edge,
                   )
               ),
             ].toJS
