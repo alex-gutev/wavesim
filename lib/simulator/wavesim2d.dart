@@ -339,6 +339,8 @@ class Wavesim2d {
       )
     );
 
+    // NOTE: Even though the binding is of type u32, WebGPU complains if the
+    // size of the buffer is less than 8 bytes.
     _sizeBuffer = _makeUInt32Buffer(
         types.Uint32List.fromList([size, size])
     );

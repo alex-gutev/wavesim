@@ -1,4 +1,4 @@
-@group(0) @binding(0) var<uniform> size: vec2u;
+@group(0) @binding(0) var<uniform> size: u32;
 @group(0) @binding(1) var<uniform> c: f32;
 @group(0) @binding(2) var<storage, read> d: array<f32>;
 @group(0) @binding(3) var<storage, read> u: array<f32>;
@@ -13,10 +13,7 @@ override blockSize = 8;
 
 // Compute the index corresponding to the given `x` and `y` coordinates
 fn getIndex(x: u32, y: u32) -> u32 {
-  let h = size.y;
-  let w = size.x;
-
-  return (y % h) * w + (x % w);
+  return y * size + x;
 }
 
 // Get the displacement of the granule at (x,y)
@@ -49,9 +46,9 @@ fn setPos(x: u32, y: u32, pos: vec2f) {
 
   let pt = vec2u(vec2f(f32(x), f32(y)) + pos);
 
-  if ((pt.x >= 0 && pt.x < size.x) &&
-      (pt.y >= 0 && pt.y < size.y)) {
-    let h = pt.y * size.x + pt.x;
+  if ((pt.x >= 0 && pt.x < size) &&
+      (pt.y >= 0 && pt.y < size)) {
+    let h = pt.y * size + pt.x;
     let heat = atomicAdd(&heatmap[h], 1) + 1;
     atomicMax(&maxHeat, heat);
   }
@@ -62,17 +59,17 @@ fn main(@builtin(global_invocation_id) grid: vec3u) {
   let x = grid.x;
   let y = grid.y;
 
-  if (x >= size.x || y >= size.y) {
+  if (x >= size || y >= size) {
     return;
   }
 
   let p = pos(x,y);
 
   let l = select(edge[y].xy, pos(x - 1, y), x > 0);
-  let t = select(edge[size.x + x].xy, pos(x, y - 1), y > 0);
+  let t = select(edge[size + x].xy, pos(x, y - 1), y > 0);
 
-  let r = select(edge[y].zw, pos(x+1, y), x < size.x - 1);
-  let b = select(edge[size.x + x].zw, pos(x, y+1), y < size.y - 1);
+  let r = select(edge[y].zw, pos(x+1, y), x < size - 1);
+  let b = select(edge[size + x].zw, pos(x, y+1), y < size - 1);
 
   let f = -4 * p + l + t + r + b;
 
@@ -101,7 +98,7 @@ fn clampTanh(x: vec2f) -> vec2f {
 @compute @workgroup_size(blockSize)
 fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
     let i = id.x;
-    let n = size.x;
+    let n = size;
 
     if (i > n) {
         return;
@@ -130,7 +127,7 @@ fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
 fn shiftPrevEdges(@builtin(global_invocation_id) grid: vec3u) {
     let x = grid.x;
     let t = grid.y;
-    let n = size.x;
+    let n = size;
 
     if (x >= n || t >= n) {
         return;
