@@ -51,6 +51,12 @@ class OpenBoundarySimulator {
     _initCompute();
   }
 
+  /// Dispose resources acquired by this object
+  void dispose() {
+    _prevEdgeValues1.destroy();
+    _prevEdgeValues2.destroy();
+  }
+
   /// Add computation of the boundary values to the command [encoder].
   void addTo(GPUCommandEncoder encoder) {
     // Calculate boundary values step

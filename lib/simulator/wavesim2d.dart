@@ -144,6 +144,22 @@ class Wavesim2d {
     device.queue.submit([encoder.finish()].toJS);
   }
 
+  /// Dispose resources acquired by this object
+  Future<void> dispose() async {
+    await _disposeRenderer(_renderer);
+
+    _sizeBuffer.destroy();
+    _paramsBuffer.destroy();
+    _u1.destroy();
+    _u2.destroy();
+    _damping.destroy();
+    _heatmap.destroy();
+    _maxHeat.destroy();
+    _edge.destroy();
+    _edgeFactors.destroy();
+    _edgeSim.dispose();
+  }
+
   /// Displace a granule at a given point ([x], [y]).
   ///
   /// [dx] is the magnitude of the displacement along the x-axis and [dy] is

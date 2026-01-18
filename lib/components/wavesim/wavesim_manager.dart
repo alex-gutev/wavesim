@@ -60,7 +60,13 @@ class _WavesimManagerState extends State<WavesimManager> {
   GPUShaderModule? _granuleShader;
   GPUShaderModule? _heatmapShader;
 
-  // TODO: Implement dispose
+  @override
+  void dispose() {
+    _simulator?.dispose();
+    _simulator = null;
+
+    super.dispose();
+  }
 
   /// Create the simulator
   Future<void> _initSimulator(HTMLCanvasElement canvas) async {
