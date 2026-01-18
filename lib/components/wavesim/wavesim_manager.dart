@@ -205,7 +205,7 @@ class _WavesimManagerState extends State<WavesimManager> {
 
   /// Add a watch function that updates the graphics type of the simulation.
   void _watchGraphicsType() {
-    Watch((state) async {
+    Watch((state) {
       final type = component.state.graphics();
       state.afterInit();
 
