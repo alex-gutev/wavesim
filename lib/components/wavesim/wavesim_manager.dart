@@ -82,6 +82,11 @@ class _WavesimManagerState extends State<WavesimManager> {
 
     await _makeSimulator(canvas);
 
+    _simulator!.displace(
+        y: 10, x: 25,
+        dy: -10, dx: 0
+    );
+
     await _simulator!.update();
   }
 
@@ -98,6 +103,8 @@ class _WavesimManagerState extends State<WavesimManager> {
         size: component.state.value.size,
         c: component.state.value.c
     );
+
+    await _simulator!.render();
   }
 
   /// Run the simulation

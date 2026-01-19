@@ -31,6 +31,8 @@ class Wavesim2d {
 
     _initRenderer();
     _disposeRenderer(oldRenderer);
+
+    render();
   }
 
   /// The current simulation time
@@ -230,6 +232,19 @@ class Wavesim2d {
     await device.queue.onSubmittedWorkDone().toDart;
 
     _currentBuffer ^= 1;
+  }
+
+  /// Render the current state of the simulator
+  Future<void> render() async {
+    final encoder = device.createCommandEncoder();
+
+    _renderer.render(
+        encoder: encoder,
+        data: _uCurrent
+    );
+
+    device.queue.submit([encoder.finish()].toJS);
+    await device.queue.onSubmittedWorkDone().toDart;
   }
 
   // Private
