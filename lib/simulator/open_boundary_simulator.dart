@@ -57,6 +57,14 @@ class OpenBoundarySimulator {
     _prevEdgeValues2.destroy();
   }
 
+  /// Reset the boundary simulator to the zero state
+  void clear(GPUCommandEncoder encoder) {
+    encoder.clearBuffer(_prevEdgeValues1);
+    encoder.clearBuffer(_prevEdgeValues2);
+
+    _firstBuf = true;
+  }
+
   /// Add computation of the boundary values to the command [encoder].
   void addTo(GPUCommandEncoder encoder) {
     // Calculate boundary values step

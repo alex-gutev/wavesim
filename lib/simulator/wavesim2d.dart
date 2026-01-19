@@ -138,9 +138,13 @@ class Wavesim2d {
     encoder.clearBuffer(_maxHeat);
     encoder.clearBuffer(_edge);
 
+    _currentBuffer = 0;
+
+    _edgeSim.clear(encoder);
+
     _renderer.render(
         encoder: encoder,
-        data: _u1
+        data: _uCurrent
     );
 
     device.queue.submit([encoder.finish()].toJS);
