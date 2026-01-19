@@ -57,6 +57,7 @@ class _WavesimManagerState extends State<WavesimManager> {
   /// Time (in milliseconds) of last update
   num _lastUpdateTime = 0;
 
+  GPUShaderModule? _computeShader;
   GPUShaderModule? _granuleShader;
   GPUShaderModule? _heatmapShader;
 
@@ -72,32 +73,31 @@ class _WavesimManagerState extends State<WavesimManager> {
   Future<void> _initSimulator(HTMLCanvasElement canvas) async {
     final device = component.device;
 
-    final shader = await loadShader(
+    _computeShader = await loadShader(
         device: device,
         url: Uri.parse('/shaders/compute.wgsl')
     );
 
     // TODO: Handle errors during shader loading
 
+    await _makeSimulator(canvas);
+
+    await _simulator!.update();
+  }
+
+  Future<void> _makeSimulator(HTMLCanvasElement canvas) async {
     _simulator = Wavesim2d(
         device: component.device,
-        shader: shader,
+        shader: _computeShader!,
 
         renderer: await _makeRenderer(
             type: component.state.value.graphics,
             canvas: canvas
         ),
 
-        size: 10,
+        size: component.state.value.size,
         c: component.state.value.c
     );
-
-    _simulator!.displace(
-        x: 0, y: 0,
-        dx: 1, dy: 1
-    );
-
-    await _simulator!.update();
   }
 
   /// Run the simulation
@@ -205,6 +205,7 @@ class _WavesimManagerState extends State<WavesimManager> {
     });
 
     _watchGraphicsType();
+    _watchSize();
 
     return component.child;
   });
@@ -228,7 +229,22 @@ class _WavesimManagerState extends State<WavesimManager> {
   }) async {
     _simulator?.renderer = await _makeRenderer(
         type: type,
-        canvas: component.canvas()!
+        canvas: canvas
     );
+  }
+
+  /// Recreate the simulator when the size of the simulation is changed
+  void _watchSize() {
+    Watch((state) {
+      component.state.size.observe();
+      state.afterInit();
+
+      final canvas = component.canvas();
+
+      if (canvas != null) {
+        _simulator?.dispose();
+        _makeSimulator(canvas);
+      }
+    });
   }
 }

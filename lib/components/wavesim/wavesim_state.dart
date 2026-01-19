@@ -23,6 +23,9 @@ class WavesimState {
   /// successive frames is at least this duration.
   final Duration frameDelay;
 
+  /// The of the simulation grid
+  final int size;
+
   /// Energy transfer coefficient in the range (0, 1].
   final double c;
 
@@ -30,6 +33,7 @@ class WavesimState {
 
   const WavesimState({
     required this.paused,
+    required this.size,
     this.frameDelay = Duration.zero,
     this.c = 1,
     this.graphics = WavesimGraphics.blocks
