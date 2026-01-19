@@ -213,14 +213,9 @@ class _SizeControl extends StatelessComponent {
     final open = MutableCell(false);
 
     return fragment([
-      Dialog(
+      _SizeDialog(
           open: open,
-          [
-            _SizeDialog(
-                open: open, 
-                size: size
-            )
-          ]
+          size: size
       ),
       CellComponent.builder((_) {
         return label([text('Size: ${size()} \u00D7 ${size()}')]);
@@ -263,7 +258,7 @@ class _SizeDialog extends CellComponent {
     });
 
     ValueCell.watch(() {
-      if (result() == 'resize') {
+      if (!open() && result() == 'resize') {
         size.value = selectedSize.peek();
       }
     });
