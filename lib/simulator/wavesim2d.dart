@@ -471,7 +471,7 @@ class Wavesim2d {
 
   /// Calculate the boundary coefficients for a given grid [size] and wave speed [c].
   static types.Float32List _calcEdgeFactors(int size, double c) {
-    final data = types.Float32List((2 * size - 1) * size);
+    final data = types.Float32List(size * size);
     final cache = <(int,int,int), double>{};
 
     double calc(int x, int y, int tn) =>
@@ -501,8 +501,7 @@ class Wavesim2d {
       for (var t = 0; t < size; t++) {
         final c = calc(1, y, t+1);
 
-        data[(size - 1 + y)*size + t] = c;
-        data[(size - 1 - y)*size + t] = c;
+        data[y*size + t] = c;
       }
     }
 

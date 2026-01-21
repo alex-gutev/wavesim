@@ -109,10 +109,17 @@ fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
 
     for (var y : u32 = 0; y < n; y++) {
         for (var x : u32 = 0; x < n; x++) {
-            let f = edgeFactors[(n - i - 1 + y) * n + x];
+            let f = edgeFactors[y * n + x];
 
-            hEdge += f * prevEdgeIn[y * n + x];
-            vEdge += f * prevEdgeIn[(y + n) * n + x];
+            if (y <= i) {
+                hEdge += f * prevEdgeIn[(i - y) * n + x];
+                vEdge += f * prevEdgeIn[((i - y) + n) * n + x];
+            }
+
+            if (y > 0 && (i + y) < size) {
+                hEdge += f * prevEdgeIn[(i + y) * n + x];
+                vEdge += f * prevEdgeIn[((i + y) + n) * n + x];
+            }
         }
     }
 
