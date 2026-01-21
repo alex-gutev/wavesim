@@ -18,6 +18,9 @@ class OpenBoundarySimulator {
   /// Size of the grid
   final int size;
 
+  /// The size of the edge factor kernel
+  final int edgeSize;
+
   /// Workgroup block size
   final int blockSize;
 
@@ -40,6 +43,7 @@ class OpenBoundarySimulator {
     required this.device,
     required this.shader,
     required this.size,
+    required this.edgeSize,
     required this.blockSize,
     required this.sizeBuffer,
     required this.edgeFactors,
@@ -55,6 +59,7 @@ class OpenBoundarySimulator {
   void dispose() {
     _prevEdgeValues1.destroy();
     _prevEdgeValues2.destroy();
+    _edgeSizeBuffer.destroy();
   }
 
   /// Reset the boundary simulator to the zero state
@@ -100,6 +105,9 @@ class OpenBoundarySimulator {
   late final GPUBuffer _prevEdgeValues1;
   late final GPUBuffer _prevEdgeValues2;
 
+  /// Buffer holding the size of the edge factor kernel
+  late final GPUBuffer _edgeSizeBuffer;
+
   /// Pipeline for calculating the boundary values
   late final GPUComputePipeline _pipelineCalcEdge;
 
@@ -132,8 +140,14 @@ class OpenBoundarySimulator {
     _prevEdgeValues2 = device.makeFloat32Buffer(
         data: data,
         usage: $GPUBufferUsage.STORAGE |
-        $GPUBufferUsage.COPY_DST |
-        $GPUBufferUsage.UNIFORM
+          $GPUBufferUsage.COPY_DST |
+          $GPUBufferUsage.UNIFORM
+    );
+
+    _edgeSizeBuffer = device.makeUint32Buffer(
+        data: types.Uint32List.fromList([edgeSize, edgeSize]),
+        usage: $GPUBufferUsage.COPY_DST |
+          $GPUBufferUsage.UNIFORM
     );
   }
 
@@ -194,6 +208,13 @@ class OpenBoundarySimulator {
                       type: 'storage'
                   )
 
+              ),
+              BindEntry(
+                  binding: 4,
+                  visibility: $GPUShaderStage.COMPUTE,
+                  buffer: BufferLayout(
+                    type: 'uniform'
+                  )
               )
             ].toJS
         )
@@ -309,6 +330,12 @@ class OpenBoundarySimulator {
             resource: GPUBufferBinding(
               buffer: edgeValues
             )
+          ),
+          BindGroupEntry(
+              binding: 4,
+              resource: GPUBufferBinding(
+                buffer: _edgeSizeBuffer
+              )
           )
         ].toJS
     )

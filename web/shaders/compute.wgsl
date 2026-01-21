@@ -93,14 +93,15 @@ fn clampTanh(x: vec2f) -> vec2f {
 @group(1) @binding(1) var<storage, read> prevEdgeIn : array<vec4f>;
 @group(1) @binding(2) var<storage, read_write> prevEdgeOut : array<vec4f>;
 @group(1) @binding(3) var<storage, read_write> edgeOut : array<vec4f>;
+@group(1) @binding(4) var<uniform> edgeSize : u32;
 
 // Compute the displacement of the granules at the boundaries
 @compute @workgroup_size(blockSize)
 fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
     let i = id.x;
-    let n = size;
+    let n = edgeSize;
 
-    if (i > n) {
+    if (i > size) {
         return;
     }
 
@@ -112,19 +113,19 @@ fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
             let f = edgeFactors[y * n + x];
 
             if (y <= i) {
-                hEdge += f * prevEdgeIn[(i - y) * n + x];
-                vEdge += f * prevEdgeIn[((i - y) + n) * n + x];
+                hEdge += f * prevEdgeIn[(i - y) * size + x];
+                vEdge += f * prevEdgeIn[((i - y) + size) * size + x];
             }
 
             if (y > 0 && (i + y) < size) {
-                hEdge += f * prevEdgeIn[(i + y) * n + x];
-                vEdge += f * prevEdgeIn[((i + y) + n) * n + x];
+                hEdge += f * prevEdgeIn[(i + y) * size + x];
+                vEdge += f * prevEdgeIn[((i + y) + size) * size + x];
             }
         }
     }
 
     edgeOut[i] = hEdge;
-    edgeOut[i+n] = vEdge;
+    edgeOut[i + size] = vEdge;
 }
 
 // Shift the previous edge displacements by one to the right

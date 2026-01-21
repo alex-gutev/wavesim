@@ -1,4 +1,5 @@
 import 'dart:js_interop';
+import 'dart:math';
 import 'dart:typed_data' as types;
 
 import 'package:web/web.dart';
@@ -259,6 +260,9 @@ class Wavesim2d {
   /// Renderer to use for rendering the simulation
   WavesimRenderer _renderer;
 
+  /// The size of the edge factor kernel
+  late final _edgeSize = min(50, size);
+
   /// Compute shader binding layout
   late final GPUBindGroupLayout _bindGroupLayout;
 
@@ -328,7 +332,7 @@ class Wavesim2d {
     device.queue.writeBuffer(
         _edgeFactors,
         0,
-        _calcEdgeFactors(size, value).toJS
+        _calcEdgeFactors(_edgeSize, value).toJS
     );
 
     device.queue.writeBuffer(
@@ -451,7 +455,7 @@ class Wavesim2d {
     );
 
     _edgeFactors = _makeFloat32Buffer(
-        _calcEdgeFactors(size, c),
+        _calcEdgeFactors(_edgeSize, c),
         usage: $GPUBufferUsage.STORAGE |
           $GPUBufferUsage.COPY_DST
     );
@@ -460,6 +464,7 @@ class Wavesim2d {
         device: device,
         shader: shader,
         size: size,
+        edgeSize: _edgeSize,
         blockSize: blockSize,
         sizeBuffer: _sizeBuffer,
         edgeFactors: _edgeFactors,
