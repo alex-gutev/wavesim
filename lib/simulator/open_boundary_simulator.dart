@@ -18,7 +18,7 @@ class OpenBoundarySimulator {
   /// Size of the grid
   final int size;
 
-  /// The size of the edge factor kernel
+  /// The number of previous boundary values to use
   final int edgeSize;
 
   /// Workgroup block size
@@ -92,7 +92,10 @@ class OpenBoundarySimulator {
     shiftEdge.setPipeline(_pipelineShiftEdge);
     shiftEdge.setBindGroup(0, _bindGroup0);
     shiftEdge.setBindGroup(1, _bindGroup1);
-    shiftEdge.dispatchWorkgroups(nWorkGroups, nWorkGroups);
+    shiftEdge.dispatchWorkgroups(
+        (size / blockSize).ceil(),
+        (edgeSize / blockSize).ceil()
+    );
 
     shiftEdge.end();
 
@@ -105,7 +108,7 @@ class OpenBoundarySimulator {
   late final GPUBuffer _prevEdgeValues1;
   late final GPUBuffer _prevEdgeValues2;
 
-  /// Buffer holding the size of the edge factor kernel
+  /// Buffer holding the number of previous boundary values to use
   late final GPUBuffer _edgeSizeBuffer;
 
   /// Pipeline for calculating the boundary values
@@ -128,7 +131,7 @@ class OpenBoundarySimulator {
 
   /// Create the required GPU buffers
   void _initBuffers() {
-    final data = types.Float32List(2 * 4 * size * size);
+    final data = types.Float32List(2 * 4 * size * edgeSize);
 
     _prevEdgeValues1 = device.makeFloat32Buffer(
         data: data,

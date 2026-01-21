@@ -113,13 +113,13 @@ fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
             let f = edgeFactors[y * n + x];
 
             if (y <= i) {
-                hEdge += f * prevEdgeIn[(i - y) * size + x];
-                vEdge += f * prevEdgeIn[((i - y) + size) * size + x];
+                hEdge += f * prevEdgeIn[(i - y) * n + x];
+                vEdge += f * prevEdgeIn[((i - y) + size) * n + x];
             }
 
             if (y > 0 && (i + y) < size) {
-                hEdge += f * prevEdgeIn[(i + y) * size + x];
-                vEdge += f * prevEdgeIn[((i + y) + size) * size + x];
+                hEdge += f * prevEdgeIn[(i + y) * n + x];
+                vEdge += f * prevEdgeIn[((i + y) + size) * n + x];
             }
         }
     }
@@ -135,30 +135,31 @@ fn computeBoundary(@builtin(global_invocation_id) id: vec3u) {
 fn shiftPrevEdges(@builtin(global_invocation_id) grid: vec3u) {
     let x = grid.x;
     let t = grid.y;
-    let n = size;
 
-    if (x >= n || t >= n) {
+    if (x >= size || t >= edgeSize) {
         return;
     }
 
     if (t == 0) {
         // Shift horizontal boundary values
-        prevEdgeOut[x * n] = vec4f(
+        prevEdgeOut[x * edgeSize] = vec4f(
             pos(0, x),
-            pos(n - 1, x)
+            pos(size - 1, x)
         );
 
         // Shift vertical boundary values
-        prevEdgeOut[(x + n) * n] = vec4(
+        prevEdgeOut[(x + size) * edgeSize] = vec4(
             pos(x, 0),
-            pos(x, n - 1)
+            pos(x, size - 1)
         );
     }
     else {
         // Shift horizontal boundary values
-        prevEdgeOut[x * n + t] = prevEdgeIn[x * n + (t - 1)];
+        prevEdgeOut[x * edgeSize + t] =
+            prevEdgeIn[x * edgeSize + (t - 1)];
 
         // Shift vertical boundary values
-        prevEdgeOut[(x + n) * n + t] = prevEdgeIn[(x + n) * n + (t - 1)];
+        prevEdgeOut[(x + size) * edgeSize + t] =
+            prevEdgeIn[(x + size) * edgeSize + (t - 1)];
     }
 }

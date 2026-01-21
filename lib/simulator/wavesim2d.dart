@@ -260,7 +260,7 @@ class Wavesim2d {
   /// Renderer to use for rendering the simulation
   WavesimRenderer _renderer;
 
-  /// The size of the edge factor kernel
+  /// The number of previous boundary values to use
   late final _edgeSize = min(50, size);
 
   /// Compute shader binding layout
