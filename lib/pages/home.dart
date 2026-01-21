@@ -200,7 +200,7 @@ class _GraphicsControls extends CellComponent {
 }
 
 /// Control for changing the size of the grid
-class _SizeControl extends StatelessComponent {
+class _SizeControl extends CellComponent {
   /// Cell holding the size of the grid.
   final MutableCell<int> size;
 
@@ -275,7 +275,7 @@ class _SizeDialog extends CellComponent {
               ]),
               IntegerField(
                   value: selectedSize,
-                  min: 0,
+                  min: 5,
                   max: 1000,
 
                   title: 'Size'
