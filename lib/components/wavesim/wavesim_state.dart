@@ -1,5 +1,8 @@
 import 'package:live_cells_core/live_cells_core.dart';
 
+import '../../simulator/wave_source.dart';
+import '../../util/equality.dart';
+
 part 'wavesim_state.g.dart';
 
 /// Represents the type of graphics rendering for a simulation
@@ -29,14 +32,20 @@ class WavesimState {
   /// Energy transfer coefficient in the range (0, 1].
   final double c;
 
+  /// Graphics renderer to use
   final WavesimGraphics graphics;
+
+  /// List of wave sources
+  @listField
+  final List<WaveSource> sources;
 
   const WavesimState({
     required this.paused,
     required this.size,
     this.frameDelay = Duration.zero,
     this.c = 1,
-    this.graphics = WavesimGraphics.blocks
+    this.graphics = WavesimGraphics.blocks,
+    this.sources = const []
   });
 
   @override

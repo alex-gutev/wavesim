@@ -11,7 +11,7 @@ import 'wavesim_manager.dart';
 /// Implementation of [WavesimCanvas] for browser environments
 class WavesimCanvasImpl extends CellComponent {
   /// Cell controlling the state of the simulator
-  final ValueCell<WavesimState> state;
+  final MutableCell<WavesimState> state;
 
   /// Action cell for clearing the simulation
   final ValueCell<void>? clear;

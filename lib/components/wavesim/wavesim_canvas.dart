@@ -8,7 +8,7 @@ import 'wavesim_state.dart';
 /// Runs a wave simulation and renders the results to a canvas component
 class WavesimCanvas extends StatelessComponent {
   /// Cell controlling the state of the simulator
-  final ValueCell<WavesimState> state;
+  final MutableCell<WavesimState> state;
 
   /// Action cell for clearing the simulation
   ///

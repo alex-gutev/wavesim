@@ -8,7 +8,7 @@ import 'wavesim_state.dart';
 /// This is a stub implementation that simply returns an empty canvas.
 class WavesimCanvasImpl extends StatelessComponent {
   /// Cell controlling the state of the simulator
-  final ValueCell<WavesimState> state;
+  final MutableCell<WavesimState> state;
 
   /// Action cell for clearing the simulation
   final ValueCell<void>? clear;

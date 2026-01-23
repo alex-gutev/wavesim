@@ -5,6 +5,7 @@ import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 import 'package:web/web.dart';
 
+import '../../simulator/wave_source.dart';
 import '../../simulator/wavesim2d.dart';
 import '../../simulator/granule_renderer.dart';
 import '../../simulator/heatmap_renderer.dart';
@@ -21,7 +22,7 @@ class WavesimManager extends StatefulComponent {
   final ValueCell<HTMLCanvasElement?> canvas;
 
   /// Cell controlling the state of the simulation
-  final ValueCell<WavesimState> state;
+  final MutableCell<WavesimState> state;
 
   /// Action cell for clearing the simulation.
   ///
@@ -81,12 +82,6 @@ class _WavesimManagerState extends State<WavesimManager> {
     // TODO: Handle errors during shader loading
 
     await _makeSimulator(canvas);
-
-    _simulator!.displace(
-        y: 10, x: 25,
-        dy: -10, dx: 0
-    );
-
     await _simulator!.update();
   }
 
@@ -109,8 +104,6 @@ class _WavesimManagerState extends State<WavesimManager> {
 
   /// Run the simulation
   void _run([DOMHighResTimeStamp? timestamp]) async {
-    await _simulator?.update();
-
     final frameDelay = component.state.value.frameDelay.inMilliseconds;
 
     if (timestamp != null && frameDelay > 0) {
@@ -126,6 +119,10 @@ class _WavesimManagerState extends State<WavesimManager> {
 
       _lastUpdateTime = timestamp;
     }
+
+    _updateSources();
+
+    await _simulator?.update();
 
     if (_running) {
       window.requestAnimationFrame(_run.toJS);
@@ -165,6 +162,27 @@ class _WavesimManagerState extends State<WavesimManager> {
       context: canvas.getContext('webgpu') as GPUCanvasContext,
       shader: _heatmapShader!,
     );
+  }
+
+  /// Update the wave sources
+  void _updateSources() {
+    if (_simulator != null) {
+      var changed = false;
+      final sources = <WaveSource>[];
+
+      for (final source in component.state.value.sources) {
+        if (source.update(_simulator!)) {
+          sources.add(source);
+        }
+        else {
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        component.state.sources.value = sources;
+      }
+    }
   }
 
   @override
