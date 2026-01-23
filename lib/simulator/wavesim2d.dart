@@ -4,12 +4,13 @@ import 'dart:typed_data' as types;
 
 import 'package:web/web.dart';
 
+import 'wavesim_engine_2d.dart';
 import '../webgpu/index.dart';
 import 'wavesim_renderer.dart';
 import 'open_boundary_simulator.dart';
 
 /// 2D longitudinal wave simulator
-class Wavesim2d {
+class Wavesim2d implements WavesimEngine2D {
   /// The size of the grid.
   final int size;
 
@@ -485,6 +486,9 @@ class Wavesim2d {
             return 1;
           }
           else if ((x == 0 && tn != 0) || tn < 0) {
+            return 0;
+          }
+          else if (tn < y) {
             return 0;
           }
 
