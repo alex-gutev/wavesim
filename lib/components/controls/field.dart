@@ -231,7 +231,18 @@ class Field extends StatelessComponent {
         padding: Padding.all(0.2.em),
         fontSize: 1.2.em
       )
-    ])
+    ]),
+    css('.vector-field').styles(
+        display: Display.grid,
+        gap: Gap(column: 10.px),
+        gridTemplate: GridTemplate(
+            columns: GridTracks([
+              GridTrack.repeat(TrackRepeat(2), [
+                GridTrack(TrackSize.fr(1))
+              ])
+            ])
+        )
+    )
   ];
 }
 
