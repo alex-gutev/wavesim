@@ -48,15 +48,9 @@ class IntegerField extends CellComponent {
         value: maybe.mutableString(),
         type: FieldType.number,
 
-        error: ValueCell.computed(() {
-          if (maybe.error() != null ||
-              (value() < min) ||
-              (value() > max)) {
-            return 'Please enter a valid integer between $min and $max';
-          }
-
-          return null;
-        }),
+        error: maybe.error() != null || (value() < min) || (value() > max)
+            ? 'Please enter a valid integer between $min and $max'
+            : null,
 
         attributes: {
           'min': min.toString(),

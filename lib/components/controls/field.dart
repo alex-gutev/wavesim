@@ -75,7 +75,7 @@ class Field extends StatelessComponent {
   final bool required;
 
   /// Error message to display or null if no error
-  final ValueCell<String?>? error;
+  final String? error;
 
   /// Should the error message only be shown after the user navigates away from the field?
   ///
@@ -301,7 +301,7 @@ class _WithErrorNotice extends CellComponent {
   final Component child;
 
   /// The error message if any
-  final ValueCell<String?>? error;
+  final String? error;
 
   /// Should the error message be displayed only when [child] looses focus.
   final bool validateAfterEntry;
@@ -315,8 +315,7 @@ class _WithErrorNotice extends CellComponent {
   @override
   Component build(BuildContext context) {
     final validate = MutableCell(!validateAfterEntry);
-    final errorText = error?.call();
-    final invalid = validate() && errorText != null;
+    final invalid = validate() && error != null;
 
     return fragment([
       Component.wrapElement(
@@ -331,7 +330,7 @@ class _WithErrorNotice extends CellComponent {
       ),
       if (invalid)
         strong(classes: 'invalid-notice', [
-          text(errorText)
+          text(error!)
         ])
     ]);
   }
