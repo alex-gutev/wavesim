@@ -13,6 +13,7 @@ import '../simulator/wave_source.dart';
 import '../sources/point_source.dart';
 import '../util/types.dart';
 
+/// The main page of the app
 class Home extends CellComponent {
   const Home({super.key});
 
@@ -21,7 +22,8 @@ class Home extends CellComponent {
     final simState = MutableCell(
       WavesimState(
         paused: true,
-        size: 50
+        size: 150,
+        graphics: WavesimGraphics.heatmap
       )
     );
 
