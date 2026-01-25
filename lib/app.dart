@@ -1,7 +1,7 @@
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
 
-import 'pages/home.dart';
+import 'pages/simulation/simulation.dart';
 
 @client
 class App extends StatefulComponent {
@@ -34,7 +34,7 @@ class AppState extends State<App> {
             child,
           ]),
           routes: [
-            Route(path: '/', title: 'Home', builder: (context, state) => const Home()),
+            Route(path: '/', title: 'Home', builder: (context, state) => const Simulation()),
           ],
         ),
       ]),
