@@ -3,11 +3,17 @@ import 'dart:math';
 import 'dart:typed_data' as types;
 
 import 'package:web/web.dart';
+import 'package:embed_annotation/embed_annotation.dart';
 
 import 'wavesim_engine_2d.dart';
 import '../webgpu/index.dart';
 import 'wavesim_renderer.dart';
 import 'open_boundary_simulator.dart';
+
+part 'wavesim2d.g.dart';
+
+@EmbedStr('/shaders/compute.wgsl')
+final computeShaderSrc = _$computeShaderSrc;
 
 /// 2D longitudinal wave simulator
 class Wavesim2d implements WavesimEngine2D {
@@ -19,9 +25,6 @@ class Wavesim2d implements WavesimEngine2D {
 
   /// The GPU device
   final GPUDevice device;
-
-  /// Shader module containing the shader that computes the simulation state.
-  final GPUShaderModule shader;
 
   /// Renderer to use for rendering the simulation
   WavesimRenderer get renderer => _renderer;
@@ -55,7 +58,6 @@ class Wavesim2d implements WavesimEngine2D {
 
   Wavesim2d({
     required this.device,
-    required this.shader,
     required WavesimRenderer renderer,
     required this.size,
     required double c,
@@ -255,6 +257,14 @@ class Wavesim2d implements WavesimEngine2D {
 
   // Private
 
+  /// Shader module containing the shader that computes the simulation state.
+  late final GPUShaderModule _shader = device.createShaderModule(
+      ShaderDescriptor(
+          label: 'Wavesim2D compute shader',
+          code: computeShaderSrc
+      )
+  );
+
   /// Energy transfer coefficient in the range (0, 1].
   double _c;
 
@@ -370,7 +380,7 @@ class Wavesim2d implements WavesimEngine2D {
             )
         ),
         compute: ComputeDescriptor(
-          module: shader,
+          module: _shader,
           entryPoint: 'main',
           constants: {
             'blockSize': blockSize
@@ -463,7 +473,7 @@ class Wavesim2d implements WavesimEngine2D {
 
     _edgeSim = OpenBoundarySimulator(
         device: device,
-        shader: shader,
+        shader: _shader,
         size: size,
         edgeSize: _edgeSize,
         blockSize: blockSize,

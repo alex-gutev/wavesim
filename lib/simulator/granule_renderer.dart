@@ -1,9 +1,15 @@
 import 'dart:js_interop';
 import 'dart:typed_data' as types;
+import 'package:embed_annotation/embed_annotation.dart';
 import 'package:web/web.dart';
 
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
+
+part 'granule_renderer.g.dart';
+
+@EmbedStr('/shaders/blocks.wgsl')
+final blockShaderSrc = _$blockShaderSrc;
 
 /// Renders a simulation as a grid of individual granules.
 ///
@@ -13,15 +19,11 @@ class GranuleRenderer implements WavesimRenderer {
   /// The GPU device
   final GPUDevice device;
 
-  /// Module containing the vertex and fragment shaders
-  final GPUShaderModule shader;
-
   /// The canvas context to render to
   final GPUCanvasContext context;
 
   GranuleRenderer({
     required this.device,
-    required this.shader,
     required this.context
   }) {
     format = window.navigator.gpu!.getPreferredCanvasFormat();
@@ -85,12 +87,12 @@ class GranuleRenderer implements WavesimRenderer {
           ),
 
           vertex: Vertex(
-            module: shader,
+            module: _shader,
             buffers: [uBuffer, vertBuffer].toJS
           ),
 
           fragment: Fragment(
-              module: shader, 
+              module: _shader, 
               targets: [
                 FragmentTarget(
                     format: format
@@ -148,6 +150,14 @@ class GranuleRenderer implements WavesimRenderer {
   }
 
   // Private
+
+  /// Module containing the vertex and fragment shaders
+  late final GPUShaderModule _shader = device.createShaderModule(
+    ShaderDescriptor(
+      label: 'Block graphics shader',
+      code: blockShaderSrc
+    )
+  );
 
   /// Output format
   late final String format;

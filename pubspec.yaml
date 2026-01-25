@@ -7,6 +7,7 @@ environment:
 
 dependencies:
   collection: ^1.19.1
+  embed_annotation: ^1.2.3
   get_it: ^9.2.0
   http: ^1.6.0
   jaspr: ^0.21.7
@@ -22,6 +23,7 @@ dev_dependencies:
   jaspr_lints: ^0.6.0
   lints: ^5.0.0
   live_cell_extension: ^0.7.1
+  embed: ^1.6.2
 
 jaspr:
   mode: static

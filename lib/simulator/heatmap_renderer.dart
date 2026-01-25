@@ -1,23 +1,25 @@
 import 'dart:js_interop';
 import 'dart:typed_data' as types;
+import 'package:embed_annotation/embed_annotation.dart';
 import 'package:web/web.dart';
 
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
+part 'heatmap_renderer.g.dart';
+
+@EmbedStr('/shaders/heatmap.wgsl')
+final heatmapShaderSrc = _$heatmapShaderSrc;
+
 class HeatmapRenderer implements WavesimRenderer {
   /// The GPU device
   final GPUDevice device;
-
-  /// Module containing the vertex and fragment shaders
-  final GPUShaderModule shader;
 
   /// The canvas context to render to
   final GPUCanvasContext context;
 
   HeatmapRenderer({
     required this.device,
-    required this.shader,
     required this.context
   }) {
     format = window.navigator.gpu!.getPreferredCanvasFormat();
@@ -197,6 +199,14 @@ class HeatmapRenderer implements WavesimRenderer {
   }
 
   // Private
+
+  /// Module containing the vertex and fragment shaders
+  late final GPUShaderModule shader = device.createShaderModule(
+    ShaderDescriptor(
+      label: 'Heatmap graphics shader',
+      code: heatmapShaderSrc
+    )
+  );
 
   /// Output format
   late final String format;

@@ -58,10 +58,6 @@ class _WavesimManagerState extends State<WavesimManager> {
   /// Time (in milliseconds) of last update
   num _lastUpdateTime = 0;
 
-  GPUShaderModule? _computeShader;
-  GPUShaderModule? _granuleShader;
-  GPUShaderModule? _heatmapShader;
-
   @override
   void dispose() {
     _simulator?.dispose();
@@ -72,25 +68,17 @@ class _WavesimManagerState extends State<WavesimManager> {
 
   /// Create the simulator
   Future<void> _initSimulator(HTMLCanvasElement canvas) async {
-    final device = component.device;
-
-    _computeShader = await loadShader(
-        device: device,
-        url: Uri.parse('/shaders/compute.wgsl')
-    );
-
-    // TODO: Handle errors during shader loading
-
     await _makeSimulator(canvas);
+
+    // TODO: Rethink whether it would be better to just render the blank state
     await _simulator!.update();
   }
 
   Future<void> _makeSimulator(HTMLCanvasElement canvas) async {
     _simulator = Wavesim2d(
         device: component.device,
-        shader: _computeShader!,
 
-        renderer: await _makeRenderer(
+        renderer: _makeRenderer(
             type: component.state.value.graphics,
             canvas: canvas
         ),
@@ -130,39 +118,20 @@ class _WavesimManagerState extends State<WavesimManager> {
   }
 
   /// Create a renderer for a given graphics [type].
-  Future<WavesimRenderer> _makeRenderer({
+  WavesimRenderer _makeRenderer({
     required WavesimGraphics type,
     required HTMLCanvasElement canvas
   }) => switch (type) {
-    WavesimGraphics.blocks => _makeGranuleRenderer(canvas),
-    WavesimGraphics.heatmap => _makeHeatmapRenderer(canvas),
+    WavesimGraphics.blocks => GranuleRenderer(
+      device: component.device,
+      context: canvas.getContext('webgpu') as GPUCanvasContext,
+    ),
+
+    WavesimGraphics.heatmap => HeatmapRenderer(
+      device: component.device,
+      context: canvas.getContext('webgpu') as GPUCanvasContext,
+    ),
   };
-
-  Future<GranuleRenderer> _makeGranuleRenderer(HTMLCanvasElement canvas) async {
-    _granuleShader ??= await loadShader(
-      device: component.device,
-      url: Uri.parse('/shaders/render_wave.wgsl'),
-    );
-
-    return GranuleRenderer(
-      device: component.device,
-      context: canvas.getContext('webgpu') as GPUCanvasContext,
-      shader: _granuleShader!,
-    );
-  }
-
-  Future<HeatmapRenderer> _makeHeatmapRenderer(HTMLCanvasElement canvas) async {
-    _heatmapShader ??= await loadShader(
-      device: component.device,
-      url: Uri.parse('/shaders/heatmap.wgsl'),
-    );
-
-    return HeatmapRenderer(
-      device: component.device,
-      context: canvas.getContext('webgpu') as GPUCanvasContext,
-      shader: _heatmapShader!,
-    );
-  }
 
   /// Update the wave sources
   void _updateSources() {
