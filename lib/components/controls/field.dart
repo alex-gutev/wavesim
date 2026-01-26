@@ -54,7 +54,7 @@ enum FieldType {
 }
 
 /// A text input field component.
-class Field extends StatelessComponent {
+class Field extends CellComponent {
   /// Cell holding the value entered in the field.
   ///
   /// The value of this cell is updated when the value of the field is changed
@@ -110,8 +110,14 @@ class Field extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
+    final leftFocus = MutableCell(false);
+    final validate = !validateAfterEntry || leftFocus();
+
+    final invalid = validate && error != null;
+    final invalidClass = invalid ? ' invalid' : '';
+
     return label([
-      div(classes: _classes, [
+      div(classes: '$_classes$invalidClass', [
         if (title != null)
           span([
             text(title!),
@@ -120,23 +126,30 @@ class Field extends StatelessComponent {
                 text(' *')
               ])
           ]),
-        _WithErrorNotice(
-            error: error,
-            validateAfterEntry: validateAfterEntry,
-            child: switch (type) {
-              FieldType.multiline => _TextArea(
-                value: value,
-                enabled: enabled,
-              ),
 
-              _ => _TextField(
-                value: value,
-                type: type.inputType,
-                enabled: enabled,
-                attributes: attributes
-              )
+        switch (type) {
+          FieldType.multiline => _TextArea(
+            value: value,
+            enabled: enabled,
+            events: {
+              'focusout': (_) => leftFocus.value = true
             }
-        )
+          ),
+
+          _ => _TextField(
+              value: value,
+              type: type.inputType,
+              enabled: enabled,
+              attributes: attributes,
+              events: {
+                'focusout': (_) => leftFocus.value = true
+              }
+          )
+        },
+        if (invalid)
+          strong(classes: 'invalid-notice', [
+            text(error!)
+          ])
       ])
     ]);
   }
@@ -196,14 +209,6 @@ class Field extends StatelessComponent {
           ),
         )
       ]),
-      css('.invalid').styles(
-        border: Border(
-            style: BorderStyle.solid,
-            width: 2.px,
-            color: Theme.error
-        ),
-        backgroundColor: Theme.errorContainer
-      ),
       css('.invalid-notice').styles(
         color: Theme.error,
         fontWeight: FontWeight.bold
@@ -242,6 +247,14 @@ class Field extends StatelessComponent {
               ])
             ])
         )
+    ),
+    css('.invalid input, .invalid textarea').styles(
+        border: Border(
+            style: BorderStyle.solid,
+            width: 2.px,
+            color: Theme.error
+        ),
+        backgroundColor: Theme.errorContainer
     )
   ];
 }
@@ -260,11 +273,15 @@ class _TextField extends CellComponent {
   /// Additional attributes to add to the input element
   final Map<String, String>? attributes;
 
+  /// Additional event handlers to add to the input element
+  final Map<String, EventCallback>? events;
+
   const _TextField({
     required this.value,
     required this.enabled,
     required this.type,
-    required this.attributes
+    required this.attributes,
+    required this.events
   });
 
   @override
@@ -285,9 +302,13 @@ class _TextArea extends CellComponent {
   /// Should the field be enabled for input?
   final bool enabled;
 
+  /// Additional event handlers to add to the input element
+  final Map<String, EventCallback>? events;
+
   const _TextArea({
     required this.value,
     required this.enabled,
+    required this.events
   });
 
   @override
@@ -298,51 +319,4 @@ class _TextArea extends CellComponent {
         text(value())
       ]
   );
-}
-
-/// Displays an [error] message underneath a [child] component.
-///
-/// If [error] is non-null, the message is displayed underneath the [child]
-/// component.
-///
-/// If [validateAfterEntry] is true, the [error] message is only displayed
-/// when the [child] component looses focus.
-class _WithErrorNotice extends CellComponent {
-  /// The child component
-  final Component child;
-
-  /// The error message if any
-  final String? error;
-
-  /// Should the error message be displayed only when [child] looses focus.
-  final bool validateAfterEntry;
-
-  const _WithErrorNotice({
-    required this.child,
-    required this.error,
-    required this.validateAfterEntry
-  });
-
-  @override
-  Component build(BuildContext context) {
-    final validate = MutableCell(!validateAfterEntry);
-    final invalid = validate() && error != null;
-
-    return fragment([
-      Component.wrapElement(
-          classes: invalid ? 'invalid' : null,
-          child: child,
-
-          events: {
-            'focusout': (e) {
-              validate.value = true;
-            }
-          }
-      ),
-      if (invalid)
-        strong(classes: 'invalid-notice', [
-          text(error!)
-        ])
-    ]);
-  }
 }
