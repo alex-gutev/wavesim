@@ -53,6 +53,9 @@ enum FieldType {
   const FieldType(this.inputType);
 }
 
+/// Signature of the [Field] validation message callback.
+typedef ValidationCallback = String Function(BuildContext context);
+
 /// A text input field component.
 class Field extends CellComponent {
   /// Cell holding the value entered in the field.
@@ -71,19 +74,30 @@ class Field extends CellComponent {
   /// The text shown in the label associated with the field
   final String? title;
 
-  /// Should a required marker be shown after the label?
+  /// Is this a required field?
+  ///
+  /// If true a required field marker is shown next to the [title] (provided
+  /// it is not null). The required HTML attribute is set to true and an error
+  /// message is shown if the field is left empty.
   final bool required;
 
-  /// Error message to display or null if no error
-  final String? error;
-
-  /// Should the error message only be shown after the user navigates away from the field?
+  /// Validation message callback function.
   ///
-  /// If true, the [error] message is shown, if not null, only after the user
+  /// This function should return a message indicating invalid input or an
+  /// empty string if the input is valid.
+  ///
+  /// This function is called in the context of a [CellComponent] thus may
+  /// observe other cells including the [value] cell.
+  final ValidationCallback? validate;
+
+  /// Should validation error messages only be shown after the user navigates away from the field?
+  ///
+  /// If true, the validation error message is shown only after the user
   /// navigates away from the field for the first time, after which it is always
   /// shown.
   ///
-  /// If false, the [error] message is shown as soon as it is not null.
+  /// If false, validation error messages are shown as soon as invalid data is
+  /// entered in the field
   final bool validateAfterEntry;
 
   /// Additional classes to add to the element
@@ -98,7 +112,7 @@ class Field extends CellComponent {
     this.type = FieldType.text,
     this.enabled = true,
     this.required = false,
-    this.error,
+    this.validate,
     this.validateAfterEntry = false,
     this.classes,
     this.attributes
@@ -108,16 +122,14 @@ class Field extends CellComponent {
       ? 'field $classes'
       : 'field';
 
+  String get _validationClass => validateAfterEntry
+      ? ' user-validation'
+      : ' immediate-validation';
+
   @override
   Component build(BuildContext context) {
-    final leftFocus = MutableCell(false);
-    final validate = !validateAfterEntry || leftFocus();
-
-    final invalid = validate && error != null;
-    final invalidClass = invalid ? ' invalid' : '';
-
     return label([
-      div(classes: '$_classes$invalidClass', [
+      div(classes: '$_classes$_validationClass', [
         if (title != null)
           span([
             text(title!),
@@ -131,25 +143,40 @@ class Field extends CellComponent {
           FieldType.multiline => _TextArea(
             value: value,
             enabled: enabled,
-            events: {
-              'focusout': (_) => leftFocus.value = true
-            }
+            required: required,
+            attributes: attributes
           ),
 
           _ => _TextField(
               value: value,
               type: type.inputType,
               enabled: enabled,
+              required: required,
               attributes: attributes,
-              events: {
-                'focusout': (_) => leftFocus.value = true
-              }
           )
         },
-        if (invalid)
-          strong(classes: 'invalid-notice', [
-            text(error!)
-          ])
+        // TODO: Consider adding role=alert
+        if (validate != null)
+          span(
+            classes: 'invalid-notice',
+            attributes: {
+              'aria-live': 'polite'
+            },
+            [
+              text(validate!(context))
+            ],
+          )
+
+        else if (required)
+          span(
+              classes: 'invalid-notice',
+              attributes: {
+                'aria-live': 'polite'
+              },
+              [
+                text('Please fill in this field')
+              ]
+          ),
       ])
     ]);
   }
@@ -209,11 +236,28 @@ class Field extends CellComponent {
           ),
         )
       ]),
-      css('.invalid-notice').styles(
+    ]),
+
+    css('.immediate-validation :is(input:invalid, textarea:invalid, select:invalid), '
+        '.user-validation :is(input:user-invalid, textarea:user-invalid, select:user-invalid)').styles(
+        border: Border(
+            style: BorderStyle.solid,
+            width: 2.px,
+            color: Theme.error
+        ),
+        backgroundColor: Theme.errorContainer
+    ),
+
+    css('.invalid-notice').styles(
+        display: Display.none,
         color: Theme.error,
         fontWeight: FontWeight.bold
-      )
-    ]),
+    ),
+
+    css('.immediate-validation :is(input:invalid, textarea:invalid, select:invalid, :has(input:invalid)) ~ .invalid-notice, '
+        '.user-validation :is(input:user-invalid, textarea:user-invalid, select:user-invalid, :has(input:user-invalid)) ~ .invalid-notice').styles(
+        display: Display.inline
+    ),
 
     css('.field-container', [
       css('&').styles(
@@ -248,13 +292,9 @@ class Field extends CellComponent {
             ])
         )
     ),
-    css('.invalid input, .invalid textarea').styles(
-        border: Border(
-            style: BorderStyle.solid,
-            width: 2.px,
-            color: Theme.error
-        ),
-        backgroundColor: Theme.errorContainer
+
+    css('.required-field-notice').styles(
+        color: Colors.red
     )
   ];
 }
@@ -267,21 +307,21 @@ class _TextField extends CellComponent {
   /// Should the field be enabled for input?
   final bool enabled;
 
+  /// Is this field required?
+  final bool required;
+
   /// HTML input type
   final InputType type;
 
   /// Additional attributes to add to the input element
   final Map<String, String>? attributes;
 
-  /// Additional event handlers to add to the input element
-  final Map<String, EventCallback>? events;
-
   const _TextField({
     required this.value,
     required this.enabled,
+    required this.required,
     required this.type,
     required this.attributes,
-    required this.events
   });
 
   @override
@@ -290,7 +330,13 @@ class _TextField extends CellComponent {
       value: value(),
       disabled: !enabled,
       onInput: (newValue) => value.value = newValue.toString(),
-      attributes: attributes
+
+      attributes: {
+        if (required)
+          'required': '',
+
+        ...?attributes
+      },
   );
 }
 
@@ -302,18 +348,24 @@ class _TextArea extends CellComponent {
   /// Should the field be enabled for input?
   final bool enabled;
 
-  /// Additional event handlers to add to the input element
-  final Map<String, EventCallback>? events;
+  /// Is this field required?
+  final bool required;
+
+  /// Additional attributes to add to the input element
+  final Map<String, String>? attributes;
 
   const _TextArea({
     required this.value,
     required this.enabled,
-    required this.events
+    required this.required,
+    required this.attributes,
   });
 
   @override
   Component build(BuildContext context) => textarea(
       disabled: !enabled,
+      required: required,
+      attributes: attributes,
       onInput: (newValue) => value.value = newValue,
       [
         text(value())

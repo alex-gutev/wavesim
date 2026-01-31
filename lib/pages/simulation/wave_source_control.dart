@@ -2,15 +2,14 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
-import '../../components/controls/num_field.dart';
-import '../../components/controls/select.dart';
-import '../../components/controls/int_vector_field.dart';
-import '../../components/controls/num_vector_field.dart';
+import '../../components/controls/index.dart';
 import '../../components/dialog/index.dart';
 import '../../components/layout/index.dart';
 import '../../simulator/wave_source.dart';
 import '../../sources/point_source.dart';
 import '../../sources/circle_pulse.dart';
+import '../../sources/circle_standing_wave.dart';
+import '../../util/extensions.dart';
 import '../../util/types.dart';
 
 /// Identifies the type of wave source
@@ -19,7 +18,10 @@ enum WaveType {
   pointPulse,
 
   /// A pulse at the perimeter of a circle
-  circlePulse
+  circlePulse,
+
+  /// A circular standing wave
+  circleStandingWave
 }
 
 /// A button for adding a wave source to the simulation
@@ -79,45 +81,51 @@ class _WaveSourceDialog extends CellComponent {
   Component build(BuildContext context) {
     final type = MutableCell(WaveType.pointPulse);
     final source = MetaCell<WaveSource>();
+    final add = ActionCell();
+
+    add.watch(() {
+      onClose(source.peek());
+    });
 
     return Dialog(
         open: open,
         [
-          form(method: FormMethod.dialog, [
-            Column([
-              h1([
-                text('Add Wave')
-              ]),
-              Select(
-                options: WaveType.values,
-                selected: type,
-                builder: (context, type) => switch (type) {
-                  WaveType.pointPulse => text('Point Pulse'),
-                  WaveType.circlePulse => text('Circular Pulse'),
-                }
-              ),
-              _WaveSourceParameters(
-                  source: source,
-                  size: size,
-                  type: type
-              ),
-              Row(mainAxisAlignment: MainAxisAlignment.end, [
-                button(
-                    type: ButtonType.button,
-                    onClick: () => MutableCell.batch(() {
-                      open.value = false;
-                    }),
-
-                    [text('Cancel')]
+          Form(
+            method: FormMethod.dialog,
+            submit: add,
+            [
+              Column([
+                h1([
+                  text('Add Wave')
+                ]),
+                Select(
+                    options: WaveType.values,
+                    selected: type,
+                    builder: (context, type) => switch (type) {
+                      WaveType.pointPulse => text('Point Pulse'),
+                      WaveType.circlePulse => text('Circular Pulse'),
+                      WaveType.circleStandingWave => text('Circular Standing Wave'),
+                    }
                 ),
-                button(
-                    autofocus: true,
-                    onClick: () => onClose(source.value),
-                    [text('Add')]
-                )
+                _WaveSourceParameters(
+                    source: source,
+                    size: size,
+                    type: type
+                ),
+                Row(mainAxisAlignment: MainAxisAlignment.end, [
+                  button(
+                      type: ButtonType.button,
+                      onClick: () => open.value = false,
+                      [text('Cancel')]
+                  ),
+                  button(
+                      autofocus: true,
+                      [text('Add')]
+                  )
+                ])
               ])
-            ])
-          ])
+            ]
+          )
         ]
     );
   }
@@ -148,6 +156,11 @@ class _WaveSourceParameters extends CellComponent {
     ),
 
     WaveType.circlePulse => _CirclePulseForm(
+        source: source,
+        size: size
+    ),
+
+    WaveType.circleStandingWave => _CircleStandingWaveForm(
         source: source,
         size: size
     ),
@@ -194,10 +207,13 @@ class _PointPulseForm extends CellComponent {
       IntVectorField(
           title: 'Position',
           value: position,
+          required: true,
+
           min: VectorI(
               x: -size(),
               y: -size()
           ),
+
           max: VectorI(
               x: size(),
               y: size()
@@ -206,6 +222,7 @@ class _PointPulseForm extends CellComponent {
       NumVectorField(
         title: 'Amplitude',
         value: amplitude,
+        required: true
       )
     ]);
   }
@@ -233,7 +250,7 @@ class _CirclePulseForm extends CellComponent {
         )
     );
 
-    final radius = MutableCell(5.0);
+    final radius = MutableCell(5);
     final amplitude = MutableCell(-1.0);
 
     source.inject(
@@ -248,22 +265,94 @@ class _CirclePulseForm extends CellComponent {
       IntVectorField(
           title: 'Centre',
           value: center,
+          required: true,
+
           min: VectorI(
               x: -size(),
               y: -size()
           ),
+
           max: VectorI(
               x: size(),
               y: size()
           )
       ),
-      NumField(
+      IntegerField(
         title: 'Radius',
-        value: radius
+        value: radius,
+        required: true,
+        min: 1,
+        max: (size() / 2).floor(),
       ),
       NumField(
         title: 'Amplitude',
         value: amplitude,
+        required: true
+      )
+    ]);
+  }
+}
+
+/// Form for entering the parameters of a circular pulse wave source.
+class _CircleStandingWaveForm extends CellComponent {
+  /// Meta cell injected with a cell that constructs the wave source.
+  final MetaCell<WaveSource> source;
+
+  /// The size of the grid
+  final ValueCell<int> size;
+
+  const _CircleStandingWaveForm({
+    required this.source,
+    required this.size
+  });
+
+  @override
+  Component build(BuildContext context) {
+    final center = MutableCell(
+        VectorI(
+            x: 0,
+            y: 0
+        )
+    );
+
+    final radius = MutableCell(5);
+    final amplitude = MutableCell(-1.0);
+
+    source.inject(
+        ValueCell.computed(() => CircleStandingWave(
+            center: center(),
+            radius: radius(),
+            amplitude: amplitude()
+        ))
+    );
+
+    return fragment([
+      IntVectorField(
+          title: 'Centre',
+          value: center,
+          required: true,
+
+          min: VectorI(
+              x: -size(),
+              y: -size()
+          ),
+
+          max: VectorI(
+              x: size(),
+              y: size()
+          )
+      ),
+      IntegerField(
+          title: 'Radius',
+          value: radius,
+          required: true,
+          min: 1,
+          max: (size() / 2).floor()
+      ),
+      NumField(
+        title: 'Amplitude',
+        value: amplitude,
+        required: true
       )
     ]);
   }

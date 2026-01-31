@@ -31,13 +31,21 @@ class IntVectorField extends CellComponent {
   /// The step between allowed values.
   final VectorI step;
 
+  /// Is this a required field?
+  ///
+  /// If true a required field marker is shown next to the [title] of the fields
+  /// for the X and Y components, the required HTML attribute is set to true and
+  /// an error message is shown if the fields are left empty.
+  final bool required;
+
   const IntVectorField({
     super.key,
     this.title,
     required this.value,
     required this.min,
     required this.max,
-    this.step = const VectorI(x: 1, y: 1)
+    this.step = const VectorI(x: 1, y: 1),
+    this.required = false
   });
 
   @override
@@ -53,6 +61,7 @@ class IntVectorField extends CellComponent {
             min: min.x,
             max: max.x,
             step: step.x,
+            required: required,
 
             title: 'X'
         ),
@@ -61,6 +70,7 @@ class IntVectorField extends CellComponent {
             min: min.y,
             max: max.y,
             step: step.y,
+            required: required,
 
             title: 'Y'
         )

@@ -1,7 +1,6 @@
 import 'dart:math';
 
-import 'package:wavesim/simulator/wave_source.dart';
-
+import '../simulator/wave_source.dart';
 import '../simulator/wavesim_engine_2d.dart';
 import '../util/types.dart';
 
@@ -18,7 +17,7 @@ class CirclePulse implements WaveSource {
   final VectorI center;
 
   /// The radius of the circle
-  final double radius;
+  final int radius;
 
   /// The strength of the pulse
   final double amplitude;

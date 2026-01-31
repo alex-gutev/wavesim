@@ -29,6 +29,12 @@ class NumField extends CellComponent {
 
   /// The step between allowed values.
   final num? step;
+  /// Is this a required field?
+  ///
+  /// If true a required field marker is shown next to the [title] (provided
+  /// it is not null). The required HTML attribute is set to true and an error
+  /// message is shown if the field is left empty.
+  final bool required;
 
   const NumField({
     super.key,
@@ -36,7 +42,8 @@ class NumField extends CellComponent {
     required this.value,
     this.min,
     this.max,
-    this.step
+    this.step,
+    this.required = false
   });
 
   @override
@@ -47,11 +54,18 @@ class NumField extends CellComponent {
         title: title,
         value: maybe.mutableString(),
         type: FieldType.number,
+        required: required,
 
-        error: maybe.error() != null ||
-            (min != null && value() < min!) ||
-            (max != null && value() > max!)
-            ? _errorMessage() : null,
+        validate: (context) {
+          if (maybe.error() != null ||
+              (min != null && value() < min!) ||
+              (max != null && value() > max!) ||
+              !value().isFinite) {
+            return _errorMessage();
+          }
+
+          return '';
+        },
 
         attributes: {
           if (min != null)

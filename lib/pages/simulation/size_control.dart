@@ -2,7 +2,8 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
-import '../../components/controls/integer_field.dart';
+import '../../util/extensions.dart';
+import '../../components/controls/index.dart';
 import '../../components/dialog/index.dart';
 import '../../components/layout/index.dart';
 
@@ -55,8 +56,8 @@ class _SizeDialog extends CellComponent {
 
   @override
   Component build(BuildContext context) {
+    final resize = ActionCell();
     final selectedSize = MutableCell(0);
-    final result = MutableCell('');
 
     ValueCell.watch(() {
       if (open()) {
@@ -64,48 +65,43 @@ class _SizeDialog extends CellComponent {
       }
     });
 
-    ValueCell.watch(() {
-      if (!open() && result() == 'resize') {
-        size.value = selectedSize.peek();
-      }
+    resize.watch(() {
+      size.value = selectedSize.peek();
     });
 
     return Dialog(
         open: open,
-        result: result,
         [
-          form(method: FormMethod.dialog, [
-            Column([
-              h1([text('Select Size')]),
-              strong([
-                text('The current simulation will be reset when the size is changed.')
-              ]),
-              IntegerField(
-                  value: selectedSize,
-                  min: 5,
-                  max: 1000,
+          Form(
+              method: FormMethod.dialog,
+              submit: resize,
+              [
+                Column([
+                  h1([text('Select Size')]),
+                  strong([
+                    text('The current simulation will be reset when the size is changed.')
+                  ]),
+                  IntegerField(
+                      value: selectedSize,
+                      required: true,
+                      min: 5,
+                      max: 1000,
 
-                  title: 'Size'
-              ),
-              Row(mainAxisAlignment: MainAxisAlignment.end, [
-                button(
-                    autofocus: true,
-                    type: ButtonType.button,
-                    onClick: () => MutableCell.batch(() {
-                      open.value = false;
-                    }),
+                      title: 'Size'
+                  ),
+                  Row(mainAxisAlignment: MainAxisAlignment.end, [
+                    button(
+                        autofocus: true,
+                        type: ButtonType.button,
+                        onClick: () => open.value = false,
 
-                    [text('Cancel')]
-                ),
-                button(
-                    attributes: {
-                      'value': 'resize'
-                    },
-                    [text('Resize')]
-                )
-              ])
-            ])
-          ])
+                        [text('Cancel')]
+                    ),
+                    button([text('Resize')])
+                  ])
+                ])
+              ]
+          )
         ]
     );
   }

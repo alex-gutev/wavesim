@@ -31,13 +31,21 @@ class NumVectorField extends CellComponent {
   /// The step between allowed values.
   final VectorF? step;
 
+  /// Is this a required field?
+  ///
+  /// If true a required field marker is shown next to the [title] of the fields
+  /// for the X and Y components, the required HTML attribute is set to true and
+  /// an error message is shown if the fields are left empty.
+  final bool required;
+
   const NumVectorField({
     super.key,
     this.title,
     required this.value,
     this.min,
     this.max,
-    this.step
+    this.step,
+    this.required = false
   });
 
   @override
@@ -53,6 +61,7 @@ class NumVectorField extends CellComponent {
             min: min?.x,
             max: max?.x,
             step: step?.x,
+            required: required,
 
             title: 'X'
         ),
@@ -61,6 +70,7 @@ class NumVectorField extends CellComponent {
             min: min?.y,
             max: max?.y,
             step: step?.y,
+            required: required,
 
             title: 'Y'
         )
