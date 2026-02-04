@@ -1,9 +1,8 @@
-import 'dart:js_interop';
-
 import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
-import 'package:web/web.dart';
+import 'package:universal_web/js_interop.dart';
+import 'package:universal_web/web.dart';
 
 import '../../webgpu/index.dart';
 
@@ -25,7 +24,7 @@ class WebGPUCheck extends CellComponent {
 
   @override
   Component build(BuildContext context) {
-    final gpu = window.navigator.gpu;
+    final gpu = kIsWeb ? window.navigator.gpu : null;
 
     final device = ValueCell.computed(() async {
       final adapter = await gpu?.requestAdapter().toDart;

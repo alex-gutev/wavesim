@@ -1,9 +1,8 @@
-import 'dart:js_interop';
-
 import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
-import 'package:web/web.dart';
+import 'package:universal_web/js_interop.dart';
+import 'package:universal_web/web.dart';
 
 import '../../simulator/wave_source.dart';
 import '../../simulator/wavesim2d.dart';
@@ -221,7 +220,7 @@ class _WavesimManagerState extends State<WavesimManager> {
     required HTMLCanvasElement canvas,
     required WavesimGraphics type
   }) async {
-    _simulator?.renderer = await _makeRenderer(
+    _simulator?.renderer = _makeRenderer(
         type: type,
         canvas: canvas
     );

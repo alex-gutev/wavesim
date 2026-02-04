@@ -1,5 +1,5 @@
 import 'package:jaspr/jaspr.dart';
-import 'package:web/web.dart' as web;
+import 'package:universal_web/web.dart' as web;
 
 /// Signature of the element ready callback function.
 ///
@@ -53,13 +53,15 @@ class _RefElementState extends State<RefElement> {
   void initState() {
     super.initState();
 
-    context.binding.addPostFrameCallback(() {
-      final element = web.document.getElementById(_id);
+    if (kIsWeb) {
+      context.binding.addPostFrameCallback(() {
+        final element = web.document.getElementById(_id);
 
-      if (element != null) {
-        component.onElementReady(element);
-      }
-    });
+        if (element != null) {
+          component.onElementReady(element);
+        }
+      });
+    }
   }
 
   @override

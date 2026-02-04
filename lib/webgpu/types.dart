@@ -1,6 +1,5 @@
-import 'dart:js_interop';
-
-import 'package:web/web.dart';
+import 'package:universal_web/js_interop.dart';
+import 'package:universal_web/web.dart';
 
 extension WebGPUExtension on Navigator {
   @JS()

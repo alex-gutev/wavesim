@@ -1,7 +1,7 @@
-import 'dart:js_interop';
 import 'dart:typed_data' as types;
 import 'package:embed_annotation/embed_annotation.dart';
-import 'package:web/web.dart';
+import 'package:universal_web/js_interop.dart';
+import 'package:universal_web/web.dart';
 
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';

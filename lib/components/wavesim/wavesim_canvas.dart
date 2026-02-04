@@ -1,12 +1,15 @@
 import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
+import 'package:live_cells_jaspr/live_cells_jaspr.dart';
+import 'package:universal_web/web.dart';
 
-import 'wavesim_canvas_server.dart' if (dart.library.js_interop)
-  'wavesim_canvas_web.dart';
+import '../gpu/web_gpu_check.dart';
+import '../util/ref_element.dart';
+import 'wavesim_manager.dart';
 import 'wavesim_state.dart';
 
 /// Runs a wave simulation and renders the results to a canvas component
-class WavesimCanvas extends StatelessComponent {
+class WavesimCanvas extends CellComponent {
   /// Cell controlling the state of the simulator
   final MutableCell<WavesimState> state;
 
@@ -23,9 +26,31 @@ class WavesimCanvas extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return WavesimCanvasImpl(
-      state: state,
-      clear: clear
+    final element = MutableCell<HTMLCanvasElement?>(null);
+
+    return WebGPUCheck(
+        builder: (context, device) {
+          return WavesimManager(
+              device: device,
+              canvas: element,
+              state: state,
+              clear: clear,
+
+              child: RefElement(
+                  onElementReady: (e) {
+                    element.value = e as HTMLCanvasElement;
+                  },
+                  child: Component.element(
+                      tag: 'canvas',
+                      // TODO: Size canvas using CSS
+                      attributes: {
+                        'width': '640',
+                        'height': '640'
+                      }
+                  )
+              )
+          );
+        }
     );
   }
 }

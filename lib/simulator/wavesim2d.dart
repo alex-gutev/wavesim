@@ -1,8 +1,8 @@
-import 'dart:js_interop';
 import 'dart:math';
 import 'dart:typed_data' as types;
 
-import 'package:web/web.dart';
+import 'package:universal_web/js_interop.dart';
+import 'package:universal_web/web.dart';
 import 'package:embed_annotation/embed_annotation.dart';
 
 import 'wavesim_engine_2d.dart';
@@ -182,6 +182,7 @@ class Wavesim2d implements WavesimEngine2D {
   ///
   /// A negative [x] / [y] is interpreted relative to the right/bottom edge of
   /// the visible grid.
+  @override
   void displace({
     required int x,
     required int y,

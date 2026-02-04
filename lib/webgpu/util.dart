@@ -1,5 +1,5 @@
-import 'dart:js_interop';
 import 'dart:typed_data' as types;
+import 'package:universal_web/js_interop.dart';
 
 import 'types.dart';
 

@@ -1,8 +1,9 @@
 import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
+import 'package:universal_web/web.dart' as web;
 
-import 'dialog_impl_server.dart' if (dart.library.js_interop) 'dialog_impl_web.dart';
+import '../util/ref_element.dart';
 
 /// An HTML dialog component.
 ///
@@ -33,12 +34,45 @@ class Dialog extends CellComponent {
   });
 
   @override
-  Component build(BuildContext context) => DialogImpl(
-      open: open,
-      result: result,
-      classes: classes,
-      children,
-  );
+  Component build(BuildContext context) {
+    final element = MutableCell<web.Element?>(null);
+
+    ValueCell.watch(() {
+      final elem = element() as web.HTMLDialogElement?;
+
+      if (elem != null) {
+        if (open() && !elem.open) {
+          elem.showModal();
+        }
+        else if (!open() && elem.open) {
+          elem.close();
+        }
+      }
+    });
+
+    return RefElement(
+        child: dialog(
+            classes: classes,
+            children,
+
+            events: {
+              'close': (e) => MutableCell.batch(() {
+                open.value = false;
+                result?.value = _getDialogResult(element.value);
+              })
+
+            }
+        ),
+        onElementReady: (elem) {
+          element.value = elem;
+        }
+    );
+  }
+
+  String? _getDialogResult(web.Element? element) {
+    final dialog = element as web.HTMLDialogElement?;
+    return dialog?.returnValue;
+  }
 
   @css
   static List<StyleRule> get styles => [

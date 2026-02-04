@@ -1,8 +1,8 @@
-import 'dart:js_interop';
 import 'dart:typed_data' as types;
+import 'package:universal_web/js_interop.dart';
+import 'package:universal_web/web.dart';
 
-import 'package:wavesim/webgpu/index.dart';
-import 'package:web/web.dart';
+import '../webgpu/index.dart';
 
 /// Simulates an open boundary leading to an infinite grid.
 ///
