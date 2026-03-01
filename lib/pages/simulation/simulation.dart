@@ -22,17 +22,74 @@ class Simulation extends CellComponent {
 
     final clear = ActionCell();
 
-    return section([
-      Row(crossAxisAlignment: CrossAxisAlignment.stretch, [
-        WavesimCanvas(
-          state: simState,
-          clear: clear
-        ),
+    return div(classes: 'simulation-grid', [
+      div(classes: 'simulation-controls', [
         WavesimControls(
             state: simState,
             clear: clear
         )
+      ]),
+      main_([
+        WavesimCanvas(
+            state: simState,
+            clear: clear
+        ),
       ])
     ]);
   }
+
+  @css
+  static List<StyleRule> get styles => [
+    css('.simulation-grid', [
+      css('&').styles(
+        display: Display.grid,
+        width: 100.percent,
+        height: 100.vh,
+
+        gridTemplate: GridTemplate(
+            columns: GridTracks([
+              GridTrack(TrackSize.auto),
+              GridTrack(TrackSize.fr(1))
+            ]),
+
+            rows: GridTracks([
+              GridTrack(TrackSize.auto),
+              GridTrack(TrackSize.fr(1)),
+              GridTrack(TrackSize.auto)
+            ]),
+
+            areas: GridAreas([
+              'hd hd',
+              'sd main',
+              'ft ft'
+            ])
+        )
+      ),
+
+
+      css('> .simulation-controls').styles(
+        gridPlacement: GridPlacement.area('sd'),
+        padding: Padding.all(0.5.rem)
+      ),
+
+      css('> main').styles(
+          gridPlacement: GridPlacement.area('main'),
+
+          display: Display.flex,
+          flexDirection: FlexDirection.column,
+          overflow: Overflow.scroll,
+
+          alignItems: AlignItems.center,
+          justifyContent: JustifyContent.center
+      ),
+
+      css('> header').styles(
+          gridPlacement: GridPlacement.area('hd')
+      ),
+
+      css('> footer').styles(
+          gridPlacement: GridPlacement.area('ft')
+      )
+    ])
+  ];
 }
