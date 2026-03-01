@@ -28,6 +28,9 @@ class WavesimCanvas extends CellComponent {
   Component build(BuildContext context) {
     final element = MutableCell<HTMLCanvasElement?>(null);
 
+    final width = MutableCell(640);
+    final height = MutableCell(640);
+
     return WebGPUCheck(
         builder: (context, device) {
           return WavesimManager(
@@ -44,8 +47,19 @@ class WavesimCanvas extends CellComponent {
                       tag: 'canvas',
                       // TODO: Size canvas using CSS
                       attributes: {
-                        'width': '640',
-                        'height': '640'
+                        'width': width().toString(),
+                        'height': height().toString()
+                      },
+
+                      events: {
+                        'resize': (_) => MutableCell.batch(() {
+                          final e = element.value;
+
+                          if (e != null) {
+                            width.value = e.clientWidth;
+                            height.value = e.clientHeight;
+                          }
+                        })
                       }
                   )
               )

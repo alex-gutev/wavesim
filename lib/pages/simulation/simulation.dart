@@ -83,6 +83,12 @@ class Simulation extends CellComponent {
           justifyContent: JustifyContent.center
       ),
 
+      css('canvas').styles(
+        width: Unit.auto,
+        height: 100.percent,
+        aspectRatio: AspectRatio(1, 1)
+      ),
+
       css('> header').styles(
           gridPlacement: GridPlacement.area('hd')
       ),
