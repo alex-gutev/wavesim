@@ -2,6 +2,7 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
+import 'boundary_control.dart';
 import '../../components/layout/index.dart';
 import '../../components/wavesim/index.dart';
 import 'graphics_control.dart';
@@ -48,6 +49,9 @@ class WavesimControls extends CellComponent {
           ),
           WaveSpeedControl(
               speed: state.c
+          ),
+          BoundaryControl(
+              closed: state.closed
           ),
           _ClearButton(
               clear: clear

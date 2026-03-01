@@ -199,6 +199,7 @@ class _WavesimManagerState extends State<WavesimManager> {
 
     _watchGraphicsType();
     _watchSize();
+    _watchBoundary();
 
     return component.child;
   });
@@ -238,6 +239,15 @@ class _WavesimManagerState extends State<WavesimManager> {
         _simulator?.dispose();
         _makeSimulator(canvas);
       }
+    });
+  }
+
+  void _watchBoundary() {
+    Watch((state) {
+      final closed = component.state.closed();
+      state.afterInit();
+
+      _simulator?.closed = closed;
     });
   }
 }

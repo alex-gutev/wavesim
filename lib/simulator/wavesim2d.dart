@@ -56,13 +56,25 @@ class Wavesim2d implements WavesimEngine2D {
   /// The number of granules in the grid
   int get area => size * size;
 
+  /// Is the boundary closed (true) or open (false)
+  bool get closed => _closed;
+
+  set closed(bool value) {
+    _closed = value;
+
+    if (_closed) {
+      _clearBoundary();
+    }
+  }
+
   Wavesim2d({
     required this.device,
     required WavesimRenderer renderer,
     required this.size,
     required double c,
     this.blockSize = 8,
-  }) : _renderer = renderer, _c = c {
+    bool closed = false
+  }) : _renderer = renderer, _c = c, _closed = closed {
     _bindGroupLayout = device.createBindGroupLayout(
       BindGroupLayoutDescriptor(
         entries: <BindEntry>[
@@ -220,7 +232,9 @@ class Wavesim2d implements WavesimEngine2D {
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
 
-    _edgeSim.addTo(encoder);
+    if (!closed) {
+      _edgeSim.addTo(encoder);
+    }
     
     final compute = encoder.beginComputePass();
 
@@ -271,6 +285,9 @@ class Wavesim2d implements WavesimEngine2D {
 
   /// Renderer to use for rendering the simulation
   WavesimRenderer _renderer;
+
+  /// Is the simulation boundary closed or open?
+  bool _closed;
 
   /// The number of previous boundary values to use
   late final _edgeSize = min(50, size);
@@ -640,5 +657,15 @@ class Wavesim2d implements WavesimEngine2D {
   Future<void> _disposeRenderer(WavesimRenderer renderer) async {
     await device.queue.onSubmittedWorkDone().toDart;
     renderer.dispose();
+  }
+
+  /// Clear the state of the boundary simulator.
+  void _clearBoundary() {
+    final encoder = device.createCommandEncoder();
+
+    encoder.clearBuffer(_edge);
+    _edgeSim.clear(encoder);
+
+    device.queue.submit([encoder.finish()].toJS);
   }
 }

@@ -39,13 +39,17 @@ class WavesimState {
   @listField
   final List<WaveSource> sources;
 
+  /// Is the grid boundary closed or open?
+  final bool closed;
+
   const WavesimState({
     required this.paused,
     required this.size,
     this.frameDelay = Duration.zero,
     this.c = 1,
     this.graphics = WavesimGraphics.blocks,
-    this.sources = const []
+    this.sources = const [],
+    this.closed = false
   });
 
   @override
