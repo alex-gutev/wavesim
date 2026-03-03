@@ -3,6 +3,8 @@ import 'package:embed_annotation/embed_annotation.dart';
 import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
 
+import 'sim_buffer.dart';
+
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
@@ -66,7 +68,8 @@ class HeatmapRenderer implements WavesimRenderer {
     required int size,
     required GPUBuffer sizeBuffer,
     required GPUBuffer heatmap,
-    required GPUBuffer maxHeat
+    required GPUBuffer maxHeat,
+    required SimBuffer buffers
   }) {
     _vertBuffer = device.makeFloat32Buffer(
         data: types.Float32List.fromList([

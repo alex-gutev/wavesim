@@ -3,6 +3,8 @@ import 'package:embed_annotation/embed_annotation.dart';
 import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
 
+import 'downsampler.dart';
+import 'sim_buffer.dart';
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
@@ -16,6 +18,12 @@ final blockShaderSrc = _$blockShaderSrc;
 /// This renderer draws each granule at its displaced position. This is suitable
 /// for small grids however is slow for large grids (larger than 100x100).
 class GranuleRenderer implements WavesimRenderer {
+  /// Maximum size of grid to render.
+  ///
+  /// If the simulation grid is larger than this size, a downsampled output
+  /// is rendered.
+  static const maxSize = 50;
+
   /// The GPU device
   final GPUDevice device;
 
@@ -56,7 +64,8 @@ class GranuleRenderer implements WavesimRenderer {
     required int size,
     required GPUBuffer sizeBuffer,
     required GPUBuffer heatmap,
-    required GPUBuffer maxHeat
+    required GPUBuffer maxHeat,
+    required SimBuffer buffers
   }) {
     _size = size;
 
@@ -102,6 +111,23 @@ class GranuleRenderer implements WavesimRenderer {
       )
     );
 
+    _downSampler = DownSampler(
+        device: device,
+        size: size,
+        windowSize: size > maxSize ? (size / maxSize).ceil() : 1,
+        blockSize: 8,
+        sizeBuffer: sizeBuffer,
+        buffers: buffers
+    );
+
+    _sizeBuffer = device.makeUint32Buffer(
+        data: types.Uint32List.fromList([
+          _downSampler.outputSize,
+          _downSampler.outputSize,
+        ]),
+        usage: $GPUBufferUsage.UNIFORM
+    );
+
     _uniformBindGroup = device.createBindGroup(
       BindGroupDescriptor(
           layout: _bindGroupLayout,
@@ -109,7 +135,7 @@ class GranuleRenderer implements WavesimRenderer {
             BindGroupEntry(
                 binding: 0,
                 resource: GPUBufferBinding(
-                  buffer: sizeBuffer,
+                  buffer: _sizeBuffer,
                 )
             ),
           ].toJS
@@ -120,6 +146,7 @@ class GranuleRenderer implements WavesimRenderer {
   @override
   void dispose() {
     _vertBuffer.destroy();
+    _sizeBuffer.destroy();
   }
 
   @override
@@ -127,6 +154,8 @@ class GranuleRenderer implements WavesimRenderer {
     required GPUCommandEncoder encoder,
     required GPUBuffer data
   }) {
+    _downSampler.addTo(encoder);
+
     final view = context.getCurrentTexture();
 
     final render = encoder.beginRenderPass(
@@ -142,10 +171,10 @@ class GranuleRenderer implements WavesimRenderer {
     );
 
     render.setPipeline(_renderPipeline);
-    render.setVertexBuffer(0, data);
+    render.setVertexBuffer(0, _downSampler.output);
     render.setVertexBuffer(1, _vertBuffer);
     render.setBindGroup(0, _uniformBindGroup);
-    render.draw(4, _size * _size);
+    render.draw(4, _downSampler.outputSize * _downSampler.outputSize);
     render.end();
   }
 
@@ -168,6 +197,9 @@ class GranuleRenderer implements WavesimRenderer {
   /// The size of the grid
   late final int _size;
 
+  /// Buffer holding the size of the grid to render
+  late final GPUBuffer _sizeBuffer;
+
   /// Buffer holding the vertex positions
   late final GPUBuffer _vertBuffer;
 
@@ -176,6 +208,8 @@ class GranuleRenderer implements WavesimRenderer {
 
   /// Bind group for the uniform variables
   late final GPUBindGroup _uniformBindGroup;
+
+  late final DownSampler _downSampler;
 
   /// Create the buffer holding the positions of the vertices.
   ///

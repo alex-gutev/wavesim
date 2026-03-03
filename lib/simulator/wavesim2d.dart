@@ -423,7 +423,8 @@ class Wavesim2d implements WavesimEngine2D {
         size: size,
         sizeBuffer: _sizeBuffer,
         heatmap: _heatmap,
-        maxHeat: _maxHeat
+        maxHeat: _maxHeat,
+        buffers: _buffers
     );
   }
 

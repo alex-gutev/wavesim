@@ -1,3 +1,4 @@
+import 'sim_buffer.dart';
 import '../webgpu/index.dart';
 
 /// Interface for rendering a visual representation of the simulation state
@@ -9,11 +10,14 @@ abstract interface class WavesimRenderer {
   ///
   /// [heatmap] and [maxHeat] are the buffers into which the heatmap and maximum
   /// heat are written.
+  ///
+  /// [buffers] is the [SimBuffer] object holding the simulation state buffers.
   void init({
     required int size,
     required GPUBuffer sizeBuffer,
     required GPUBuffer heatmap,
-    required GPUBuffer maxHeat
+    required GPUBuffer maxHeat,
+    required SimBuffer buffers
   });
 
   /// Dispose resources acquired during [init].
