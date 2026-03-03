@@ -5,6 +5,7 @@ import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
 import 'package:embed_annotation/embed_annotation.dart';
 
+import 'sim_buffer.dart';
 import 'wavesim_engine_2d.dart';
 import '../webgpu/index.dart';
 import 'wavesim_renderer.dart';
@@ -148,19 +149,16 @@ class Wavesim2d implements WavesimEngine2D {
   void clear() {
     final encoder = device.createCommandEncoder();
 
-    encoder.clearBuffer(_u1);
-    encoder.clearBuffer(_u2);
+    _buffers.clear(encoder);
     encoder.clearBuffer(_heatmap);
     encoder.clearBuffer(_maxHeat);
     encoder.clearBuffer(_edge);
-
-    _currentBuffer = 0;
 
     _edgeSim.clear(encoder);
 
     _renderer.render(
         encoder: encoder,
-        data: _uCurrent
+        data: _buffers.current
     );
 
     device.queue.submit([encoder.finish()].toJS);
@@ -172,8 +170,7 @@ class Wavesim2d implements WavesimEngine2D {
 
     _sizeBuffer.destroy();
     _paramsBuffer.destroy();
-    _u1.destroy();
-    _u2.destroy();
+    _buffers.dispose();
     _damping.destroy();
     _heatmap.destroy();
     _maxHeat.destroy();
@@ -207,13 +204,13 @@ class Wavesim2d implements WavesimEngine2D {
     final offset = i * types.Float32List.bytesPerElement;
 
     device.queue.writeBuffer(
-        _uCurrent,
+        _buffers.current,
         offset,
         types.Float32List.fromList([dx, dy]).toJS
     );
 
     device.queue.writeBuffer(
-        _uPrev,
+        _buffers.previous,
         offset,
         types.Float32List.fromList([
           vx != null ? dx - vx : 0,
@@ -226,7 +223,7 @@ class Wavesim2d implements WavesimEngine2D {
   Future<void> update() async {
     _time++;
 
-    final bindGroup = _currentBuffer > 0 ? _bindGroup2 : _bindGroup1;
+    final bindGroup = _buffers.isFirst ? _bindGroup1 : _bindGroup2;
     final encoder = device.createCommandEncoder();
 
     encoder.clearBuffer(_heatmap);
@@ -248,13 +245,13 @@ class Wavesim2d implements WavesimEngine2D {
 
     _renderer.render(
         encoder: encoder,
-        data: _uPrev
+        data: _buffers.previous
     );
 
     device.queue.submit([encoder.finish()].toJS);
     await device.queue.onSubmittedWorkDone().toDart;
 
-    _currentBuffer ^= 1;
+    _buffers.swap();
   }
 
   /// Render the current state of the simulator
@@ -263,7 +260,7 @@ class Wavesim2d implements WavesimEngine2D {
 
     _renderer.render(
         encoder: encoder,
-        data: _uCurrent
+        data: _buffers.current
     );
 
     device.queue.submit([encoder.finish()].toJS);
@@ -304,11 +301,8 @@ class Wavesim2d implements WavesimEngine2D {
   /// Buffer holding the simulation parameters (c).
   late final GPUBuffer _paramsBuffer;
 
-  /// First simulation state buffer
-  late final GPUBuffer _u1;
-
-  /// Second simulation state buffer
-  late final GPUBuffer _u2;
+  /// Buffers holding the simulation state
+  late final SimBuffer _buffers;
 
   /// Buffer holding the damping coefficients of the grid
   late final GPUBuffer _damping;
@@ -345,17 +339,6 @@ class Wavesim2d implements WavesimEngine2D {
 
   /// Current simulation time
   var _time = 0;
-
-  /// The currently bound simulation state buffer.
-  var _currentBuffer = 0;
-
-  /// The buffer holding the current simulation state
-  GPUBuffer get _uCurrent => _currentBuffer > 0 ? _u2 : _u1;
-
-  /// The buffer holding the previous simulation state.
-  ///
-  /// This is also the buffer where the next simulation state is written to.
-  GPUBuffer get _uPrev => _currentBuffer > 0 ? _u1 : _u2;
 
   void _setC(double value) {
     device.queue.writeBuffer(
@@ -417,18 +400,22 @@ class Wavesim2d implements WavesimEngine2D {
       types.Float32List.fromList([c])
     );
 
-    _u1 = _makePosBuffer();
-    _u2 = _makePosBuffer();
+    final u1 = _makePosBuffer();
+    final u2 = _makePosBuffer();
+
+    _buffers = SimBuffer(
+        buffer1: u1,
+        buffer2: u2
+    );
 
     _initDamping();
     _initBoundary();
     _initHeatmap();
 
-    _bindGroup1 = _makeBindGroup(_u1, _u2);
-    _bindGroup2 = _makeBindGroup(_u2, _u1);
+    _bindGroup1 = _makeBindGroup(u1, u2);
+    _bindGroup2 = _makeBindGroup(u2, u1);
 
     _time = 0;
-    _currentBuffer = 0;
   }
 
   void _initRenderer() {
@@ -498,8 +485,7 @@ class Wavesim2d implements WavesimEngine2D {
         sizeBuffer: _sizeBuffer,
         edgeFactors: _edgeFactors,
         edgeValues: _edge,
-        u1: _u1,
-        u2: _u2
+        buffers: _buffers,
     );
   }
 

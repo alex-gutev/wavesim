@@ -2,6 +2,7 @@ import 'dart:typed_data' as types;
 import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
 
+import 'sim_buffer.dart';
 import '../webgpu/index.dart';
 
 /// Simulates an open boundary leading to an infinite grid.
@@ -33,11 +34,8 @@ class OpenBoundarySimulator {
   /// Buffer into which to write the computed boundary values.
   final GPUBuffer edgeValues;
 
-  /// Granule displacement buffer 1
-  final GPUBuffer u1;
-
-  /// Granule displacement buffer 2
-  final GPUBuffer u2;
+  /// Simulation state buffers
+  final SimBuffer buffers;
 
   OpenBoundarySimulator({
     required this.device,
@@ -48,8 +46,7 @@ class OpenBoundarySimulator {
     required this.sizeBuffer,
     required this.edgeFactors,
     required this.edgeValues,
-    required this.u1,
-    required this.u2
+    required this.buffers
   }) {
     _initBuffers();
     _initCompute();
@@ -66,8 +63,6 @@ class OpenBoundarySimulator {
   void clear(GPUCommandEncoder encoder) {
     encoder.clearBuffer(_prevEdgeValues1);
     encoder.clearBuffer(_prevEdgeValues2);
-
-    _firstBuf = true;
   }
 
   /// Add computation of the boundary values to the command [encoder].
@@ -98,8 +93,6 @@ class OpenBoundarySimulator {
     );
 
     shiftEdge.end();
-
-    _firstBuf = !_firstBuf;
   }
 
   // Private
@@ -123,11 +116,8 @@ class OpenBoundarySimulator {
   late final GPUBindGroup _bindGroup1a;
   late final GPUBindGroup _bindGroup1b;
 
-  /// If true [_prevEdgeValues1] and [u1] are used, otherwise [_prevEdgeValues2] and [u2] are used.
-  var _firstBuf = true;
-
-  GPUBindGroup get _bindGroup0 => _firstBuf ? _bindGroup0a : _bindGroup0b;
-  GPUBindGroup get _bindGroup1 => _firstBuf ? _bindGroup1a : _bindGroup1b;
+  GPUBindGroup get _bindGroup0 => buffers.isFirst ? _bindGroup0a : _bindGroup0b;
+  GPUBindGroup get _bindGroup1 => buffers.isFirst ? _bindGroup1a : _bindGroup1b;
 
   /// Create the required GPU buffers
   void _initBuffers() {
@@ -263,8 +253,8 @@ class OpenBoundarySimulator {
         )
     );
 
-    _bindGroup0a = _makeBindGroup0(layout: bindGroupLayout0, data: u1);
-    _bindGroup0b = _makeBindGroup0(layout: bindGroupLayout0, data: u2);
+    _bindGroup0a = _makeBindGroup0(layout: bindGroupLayout0, data: buffers.buffer1);
+    _bindGroup0b = _makeBindGroup0(layout: bindGroupLayout0, data: buffers.buffer2);
 
     _bindGroup1a = _makeBindGroup1(
         layout: bindGroupLayout1,
