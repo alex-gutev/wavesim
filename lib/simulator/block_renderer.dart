@@ -8,16 +8,17 @@ import 'sim_buffer.dart';
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
-part 'granule_renderer.g.dart';
+part 'block_renderer.g.dart';
 
 @EmbedStr('/shaders/blocks.wgsl')
 final blockShaderSrc = _$blockShaderSrc;
 
-/// Renders a simulation as a grid of individual granules.
+/// Renders a simulation as a grid of block.
 ///
-/// This renderer draws each granule at its displaced position. This is suitable
-/// for small grids however is slow for large grids (larger than 100x100).
-class GranuleRenderer implements WavesimRenderer {
+/// This renderer draws a block representing each vector. For grids larger than
+/// 50x50, downsampling is performed. In this case a block represents the
+/// average of multiple vectors in a given window.
+class BlockRenderer implements WavesimRenderer {
   /// Maximum size of grid to render.
   ///
   /// If the simulation grid is larger than this size, a downsampled output
@@ -30,7 +31,7 @@ class GranuleRenderer implements WavesimRenderer {
   /// The canvas context to render to
   final GPUCanvasContext context;
 
-  GranuleRenderer({
+  BlockRenderer({
     required this.device,
     required this.context
   }) {
