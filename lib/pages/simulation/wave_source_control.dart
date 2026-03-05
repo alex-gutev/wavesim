@@ -7,6 +7,7 @@ import '../../components/dialog/index.dart';
 import '../../components/layout/index.dart';
 import '../../simulator/wave_source.dart';
 import '../../sources/point_source.dart';
+import '../../sources/curl_source.dart';
 import '../../sources/circle_source.dart';
 import '../../sources/circle_standing_wave.dart';
 import '../../util/extensions.dart';
@@ -14,13 +15,9 @@ import '../../util/types.dart';
 
 /// Identifies the type of wave source
 enum WaveType {
-  /// A pulse at a single point
-  pointPulse,
-
-  /// A pulse at the perimeter of a circle
-  circlePulse,
-
-  /// A circular standing wave
+  point,
+  circle,
+  curl,
   circleStandingWave
 }
 
@@ -79,7 +76,7 @@ class _WaveSourceDialog extends CellComponent {
 
   @override
   Component build(BuildContext context) {
-    final type = MutableCell(WaveType.pointPulse);
+    final type = MutableCell(WaveType.point);
     final source = MetaCell<WaveSource>();
     final add = ActionCell();
 
@@ -102,8 +99,9 @@ class _WaveSourceDialog extends CellComponent {
                     options: WaveType.values,
                     selected: type,
                     builder: (context, type) => switch (type) {
-                      WaveType.pointPulse => text('Point'),
-                      WaveType.circlePulse => text('Circular Pulse'),
+                      WaveType.point => text('Point'),
+                      WaveType.circle => text('Circle'),
+                      WaveType.curl => text('Curl'),
                       WaveType.circleStandingWave => text('Circular Standing Wave'),
                     }
                 ),
@@ -150,14 +148,19 @@ class _WaveSourceParameters extends CellComponent {
 
   @override
   Component build(BuildContext context) => switch (type()) {
-    WaveType.pointPulse => _PointSourceForm(
+    WaveType.point => _PointSourceForm(
         source: source,
         size: size
     ),
 
-    WaveType.circlePulse => _CircleSourceForm(
+    WaveType.circle => _CircleSourceForm(
         source: source,
         size: size
+    ),
+
+    WaveType.curl => _CurlSourceForm(
+      source: source,
+      size: size
     ),
 
     WaveType.circleStandingWave => _CircleStandingWaveForm(
@@ -295,6 +298,78 @@ class _CircleSourceForm extends CellComponent {
       NumField(
           title: 'Frequency',
           value: circleSource.frequency,
+          min: 0,
+          enabled: !isPulse()
+      )
+    ]);
+  }
+}
+
+/// Form for entering the parameters of a curl wave source.
+class _CurlSourceForm extends CellComponent {
+  /// Meta cell injected with a cell that constructs the wave source.
+  final MetaCell<WaveSource> source;
+
+  /// The size of the grid
+  final ValueCell<int> size;
+
+  const _CurlSourceForm({
+    required this.source,
+    required this.size
+  });
+
+  @override
+  Component build(BuildContext context) {
+    final curl = MutableCell(
+        CurlSource(
+            center: VectorI(x: 0, y:0),
+            radius: 5,
+            amplitude: -1
+        )
+    );
+
+
+    final isPulse = MutableCell.computed(() => curl.maxSteps() == 1, (pulse) {
+      curl.maxSteps.value = pulse ? 1 : null;
+    });
+
+    source.inject(curl);
+
+    return fragment([
+      IntVectorField(
+          title: 'Centre',
+          value: curl.center,
+          required: true,
+
+          min: VectorI(
+              x: -size(),
+              y: -size()
+          ),
+
+          max: VectorI(
+              x: size(),
+              y: size()
+          )
+      ),
+      IntegerField(
+        title: 'Radius',
+        value: curl.radius,
+        required: true,
+        min: 1,
+        max: (size() / 2).floor(),
+      ),
+      NumField(
+          title: 'Amplitude',
+          value: curl.amplitude,
+          required: true
+      ),
+      Checkbox(
+          checked: isPulse,
+          trailing: text('Pulse')
+      ),
+      NumField(
+          title: 'Frequency',
+          value: curl.frequency,
           min: 0,
           enabled: !isPulse()
       )
