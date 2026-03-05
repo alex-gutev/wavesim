@@ -56,7 +56,7 @@ class Select<T extends Object> extends CellComponent {
           },
 
           List.generate(options.length, (i) => option(
-              selected: options[i] == selected,
+              selected: options[i] == selected(),
               value: i.toString(),
               [
                 builder(context, options[i])
