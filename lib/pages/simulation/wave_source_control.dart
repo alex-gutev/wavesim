@@ -102,7 +102,7 @@ class _WaveSourceDialog extends CellComponent {
                     options: WaveType.values,
                     selected: type,
                     builder: (context, type) => switch (type) {
-                      WaveType.pointPulse => text('Point Pulse'),
+                      WaveType.pointPulse => text('Point'),
                       WaveType.circlePulse => text('Circular Pulse'),
                       WaveType.circleStandingWave => text('Circular Standing Wave'),
                     }
@@ -150,7 +150,7 @@ class _WaveSourceParameters extends CellComponent {
 
   @override
   Component build(BuildContext context) => switch (type()) {
-    WaveType.pointPulse => _PointPulseForm(
+    WaveType.pointPulse => _PointSourceForm(
         source: source,
         size: size
     ),
@@ -168,45 +168,37 @@ class _WaveSourceParameters extends CellComponent {
 }
 
 /// Form for entering the parameters of a point pulse wave source
-class _PointPulseForm extends CellComponent {
+class _PointSourceForm extends CellComponent {
   /// Meta cell injected with a cell that constructs the wave source.
   final MetaCell<WaveSource> source;
 
   /// The size of the grid
   final ValueCell<int> size;
 
-  const _PointPulseForm({
+  const _PointSourceForm({
     required this.source,
     required this.size
   });
 
   @override
   Component build(BuildContext context) {
-    final position = MutableCell(
-        VectorI(
-            x: 0,
-            y: 0
-        )
+    final pointSource = MutableCell(
+      PointSource(
+        position: VectorI(x: 0, y: 0),
+        amplitude: VectorF(x: 0, y: 0),
+      )
     );
 
-    final amplitude = MutableCell(
-        VectorF(
-            x: 0,
-            y: 0
-        )
-    );
+    final isPulse = MutableCell.computed(() => pointSource.maxSteps() == 1, (pulse) {
+      pointSource.maxSteps.value = pulse ? 1 : null;
+    });
 
-    source.inject(
-      ValueCell.computed(() => PointPulse(
-          position: position(),
-          amplitude: amplitude()
-      ))
-    );
+    source.inject(pointSource);
 
     return fragment([
       IntVectorField(
           title: 'Position',
-          value: position,
+          value: pointSource.position,
           required: true,
 
           min: VectorI(
@@ -221,8 +213,19 @@ class _PointPulseForm extends CellComponent {
       ),
       NumVectorField(
         title: 'Amplitude',
-        value: amplitude,
+        value: pointSource.amplitude,
         required: true
+      ),
+      Checkbox(
+        checked: isPulse,
+        trailing: text('Pulse')
+      ),
+      NumField(
+          title: 'Frequency',
+          value: pointSource.frequency,
+          min: 0,
+          step: 0.1,
+          enabled: !isPulse()
       )
     ]);
   }

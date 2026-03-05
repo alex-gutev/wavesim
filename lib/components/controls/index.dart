@@ -6,3 +6,4 @@ export 'int_vector_field.dart';
 export 'num_vector_field.dart';
 export 'select.dart';
 export 'slider.dart';
+export 'checkbox.dart';

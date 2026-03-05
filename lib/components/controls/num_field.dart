@@ -36,6 +36,9 @@ class NumField extends CellComponent {
   /// message is shown if the field is left empty.
   final bool required;
 
+  /// Is this field enabled for input?
+  final bool enabled;
+
   const NumField({
     super.key,
     this.title,
@@ -43,7 +46,8 @@ class NumField extends CellComponent {
     this.min,
     this.max,
     this.step,
-    this.required = false
+    this.required = false,
+    this.enabled = true
   });
 
   @override
@@ -55,6 +59,7 @@ class NumField extends CellComponent {
         value: maybe.mutableString(),
         type: FieldType.number,
         required: required,
+        enabled: enabled,
 
         validate: (context) {
           if (maybe.error() != null ||
