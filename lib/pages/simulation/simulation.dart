@@ -15,8 +15,8 @@ class Simulation extends CellComponent {
     final simState = MutableCell(
       WavesimState(
         paused: true,
-        size: 150,
-        graphics: WavesimGraphics.heatmap
+        size: 50,
+        graphics: WavesimGraphics.blocks
       )
     );
 
