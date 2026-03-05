@@ -8,17 +8,17 @@ import 'sim_buffer.dart';
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
-part 'block_renderer.g.dart';
+part 'vector_renderer.g.dart';
 
-@EmbedStr('/shaders/blocks.wgsl')
-final blockShaderSrc = _$blockShaderSrc;
+@EmbedStr('/shaders/vector.wgsl')
+final vectorShaderSrc = _$vectorShaderSrc;
 
-/// Renders a simulation as a grid of blocks.
+/// Renders a simulation as a grid of vectors.
 ///
-/// This renderer draws a block representing each vector. For grids larger than
-/// 50x50, downsampling is performed. In this case a block represents the
+/// This renderer draws an arrow representing each vector. For grids larger than
+/// 50x50, downsampling is performed. In this case a vector represents the
 /// average of multiple vectors in a given window.
-class BlockRenderer implements WavesimRenderer {
+class VectorRenderer implements WavesimRenderer {
   /// Maximum size of grid to render.
   ///
   /// If the simulation grid is larger than this size, a downsampled output
@@ -31,7 +31,7 @@ class BlockRenderer implements WavesimRenderer {
   /// The canvas context to render to
   final GPUCanvasContext context;
 
-  BlockRenderer({
+  VectorRenderer({
     required this.device,
     required this.context
   }) {
@@ -70,7 +70,8 @@ class BlockRenderer implements WavesimRenderer {
   }) {
     _size = size;
 
-    final vertBuffer = _initVertices();
+    final lineVertBuffer = _initLineVertices();
+    final arrowVertBuffer = _initArrowVertices();
     
     final uBuffer = VertexBuffer(
         arrayStride: 2 * types.Float32List.bytesPerElement,
@@ -84,7 +85,7 @@ class BlockRenderer implements WavesimRenderer {
         ].toJS
     );
 
-    _renderPipeline = device.createRenderPipeline(
+    _renderLinePipeline = device.createRenderPipeline(
       RenderPipelineLayout(
           layout: device.createPipelineLayout(
             PipelineLayoutDescriptor(
@@ -93,12 +94,12 @@ class BlockRenderer implements WavesimRenderer {
           ),
 
           primitive: Primitive(
-            topology: 'triangle-strip'
+            topology: 'line-list'
           ),
 
           vertex: Vertex(
             module: _shader,
-            buffers: [uBuffer, vertBuffer].toJS
+            buffers: [uBuffer, lineVertBuffer].toJS
           ),
 
           fragment: Fragment(
@@ -110,6 +111,34 @@ class BlockRenderer implements WavesimRenderer {
               ].toJS
           )
       )
+    );
+
+    _renderArrowPipeline = device.createRenderPipeline(
+        RenderPipelineLayout(
+            layout: device.createPipelineLayout(
+                PipelineLayoutDescriptor(
+                    bindGroupLayouts: [_bindGroupLayout].toJS
+                )
+            ),
+
+            primitive: Primitive(
+                topology: 'triangle-list'
+            ),
+
+            vertex: Vertex(
+                module: _shader,
+                buffers: [uBuffer, arrowVertBuffer].toJS
+            ),
+
+            fragment: Fragment(
+                module: _shader,
+                targets: [
+                  FragmentTarget(
+                      format: format
+                  )
+                ].toJS
+            )
+        )
     );
 
     _downSampler = DownSampler(
@@ -146,7 +175,8 @@ class BlockRenderer implements WavesimRenderer {
 
   @override
   void dispose() {
-    _vertBuffer.destroy();
+    _lineVertBuffer.destroy();
+    _arrowVertBuffer.destroy();
     _sizeBuffer.destroy();
   }
 
@@ -159,7 +189,7 @@ class BlockRenderer implements WavesimRenderer {
 
     final view = context.getCurrentTexture();
 
-    final render = encoder.beginRenderPass(
+    final renderLines = encoder.beginRenderPass(
       RenderPassDescriptor(
         colorAttachments: [
           ColorAttachment(
@@ -171,12 +201,32 @@ class BlockRenderer implements WavesimRenderer {
       )
     );
 
-    render.setPipeline(_renderPipeline);
-    render.setVertexBuffer(0, _downSampler.output);
-    render.setVertexBuffer(1, _vertBuffer);
-    render.setBindGroup(0, _uniformBindGroup);
-    render.draw(4, _downSampler.outputSize * _downSampler.outputSize);
-    render.end();
+    renderLines.setPipeline(_renderLinePipeline);
+    renderLines.setVertexBuffer(0, _downSampler.output);
+    renderLines.setVertexBuffer(1, _lineVertBuffer);
+    renderLines.setBindGroup(0, _uniformBindGroup);
+    renderLines.draw(2, _downSampler.outputSize * _downSampler.outputSize);
+    renderLines.end();
+
+
+    final renderArrows = encoder.beginRenderPass(
+        RenderPassDescriptor(
+            colorAttachments: [
+              ColorAttachment(
+                  loadOp: 'load',
+                  storeOp: 'store',
+                  view: view
+              )
+            ].toJS
+        )
+    );
+
+    renderArrows.setPipeline(_renderArrowPipeline);
+    renderArrows.setVertexBuffer(0, _downSampler.output);
+    renderArrows.setVertexBuffer(1, _arrowVertBuffer);
+    renderArrows.setBindGroup(0, _uniformBindGroup);
+    renderArrows.draw(3, _downSampler.outputSize * _downSampler.outputSize);
+    renderArrows.end();
   }
 
   // Private
@@ -184,8 +234,8 @@ class BlockRenderer implements WavesimRenderer {
   /// Module containing the vertex and fragment shaders
   late final GPUShaderModule _shader = device.createShaderModule(
     ShaderDescriptor(
-      label: 'Block graphics shader',
-      code: blockShaderSrc
+      label: 'Vector graphics shader',
+      code: vectorShaderSrc
     )
   );
 
@@ -201,29 +251,30 @@ class BlockRenderer implements WavesimRenderer {
   /// Buffer holding the size of the grid to render
   late final GPUBuffer _sizeBuffer;
 
-  /// Buffer holding the vertex positions
-  late final GPUBuffer _vertBuffer;
+  /// Buffer holding the vertex positions of the vector lines
+  late final GPUBuffer _lineVertBuffer;
 
-  /// The rendering pipeline
-  late final GPURenderPipeline _renderPipeline;
+  /// Buffer holding the vertex positions of the vector arrows
+  late final GPUBuffer _arrowVertBuffer;
+
+  /// Pipeline for rendering the lines of the vectors
+  late final GPURenderPipeline _renderLinePipeline;
+
+  /// Pipeline for rendering the arrows of the vectors
+  late final GPURenderPipeline _renderArrowPipeline;
 
   /// Bind group for the uniform variables
   late final GPUBindGroup _uniformBindGroup;
 
   late final DownSampler _downSampler;
 
-  /// Create the buffer holding the positions of the vertices.
+  /// Create the buffer holding the positions of the line vertices.
   ///
   /// Returns a [VertexBuffer] for use in the vertex shader.
-  VertexBuffer _initVertices() {
-    final vertices = types.Uint32List.fromList([
-      0, 0,
-      0, 1,
-      1, 0,
-      1, 1
-    ]);
+  VertexBuffer _initLineVertices() {
+    final vertices = types.Float32List.fromList([0, 0, 0, 0.7]);
 
-    _vertBuffer = device.makeUint32Buffer(
+    _lineVertBuffer = device.makeFloat32Buffer(
         data: vertices,
         usage: $GPUBufferUsage.VERTEX
     );
@@ -235,9 +286,35 @@ class BlockRenderer implements WavesimRenderer {
           VertexAttribute(
               shaderLocation: 1,
               offset: 0,
-              format: 'uint32x2'
+              format: 'float32x2'
           )
         ].toJS,
+    );
+  }
+
+  /// Create the buffer holding the positions of the arrow vertices.
+  ///
+  /// Returns a [VertexBuffer] for use in the vertex shader.
+  VertexBuffer _initArrowVertices() {
+    final vertices = types.Float32List.fromList([
+      -0.5, 0.7, 0.5, 0.7, 0, 1
+    ]);
+
+    _arrowVertBuffer = device.makeFloat32Buffer(
+        data: vertices,
+        usage: $GPUBufferUsage.VERTEX
+    );
+
+    return VertexBuffer(
+      arrayStride: 2 * vertices.elementSizeInBytes,
+      stepMode: 'vertex',
+      attributes: [
+        VertexAttribute(
+            shaderLocation: 1,
+            offset: 0,
+            format: 'float32x2'
+        )
+      ].toJS,
     );
   }
 }

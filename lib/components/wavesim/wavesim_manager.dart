@@ -6,6 +6,7 @@ import 'package:universal_web/web.dart';
 
 import '../../simulator/wave_source.dart';
 import '../../simulator/wavesim2d.dart';
+import '../../simulator/vector_renderer.dart';
 import '../../simulator/block_renderer.dart';
 import '../../simulator/heatmap_renderer.dart';
 import '../../simulator/wavesim_renderer.dart';
@@ -121,6 +122,11 @@ class _WavesimManagerState extends State<WavesimManager> {
     required WavesimGraphics type,
     required HTMLCanvasElement canvas
   }) => switch (type) {
+    WavesimGraphics.vector => VectorRenderer(
+      device: component.device,
+      context: canvas.getContext('webgpu') as GPUCanvasContext
+    ),
+
     WavesimGraphics.blocks => BlockRenderer(
       device: component.device,
       context: canvas.getContext('webgpu') as GPUCanvasContext,

@@ -7,6 +7,9 @@ part 'wavesim_state.g.dart';
 
 /// Represents the type of graphics rendering for a simulation
 enum WavesimGraphics {
+  /// Render the state as grid of arrows
+  vector,
+
   /// Render the state as discrete blocks
   blocks,
 
