@@ -1,4 +1,4 @@
-import 'package:wavesim/sources/circle_pulse.dart';
+import 'package:wavesim/sources/circle_source.dart';
 import 'package:wavesim/util/types.dart';
 
 import '../simulator/wave_source.dart';
@@ -22,10 +22,11 @@ class CircleStandingWave implements WaveSource {
 
   @override
   bool update(WavesimEngine2D engine) {
-    final pulses = List.generate(radius, (r) => CirclePulse(
+    final pulses = List.generate(radius, (r) => CircleSource(
         center: center,
         radius: r+1,
-        amplitude: amplitude * ((r % 2) == 0 ? 1 : -1)
+        amplitude: amplitude * ((r % 2) == 0 ? 1 : -1),
+        maxSteps: 1
     ));
 
     for (final pulse in pulses) {

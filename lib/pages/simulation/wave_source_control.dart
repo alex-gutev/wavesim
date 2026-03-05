@@ -7,7 +7,7 @@ import '../../components/dialog/index.dart';
 import '../../components/layout/index.dart';
 import '../../simulator/wave_source.dart';
 import '../../sources/point_source.dart';
-import '../../sources/circle_pulse.dart';
+import '../../sources/circle_source.dart';
 import '../../sources/circle_standing_wave.dart';
 import '../../util/extensions.dart';
 import '../../util/types.dart';
@@ -155,7 +155,7 @@ class _WaveSourceParameters extends CellComponent {
         size: size
     ),
 
-    WaveType.circlePulse => _CirclePulseForm(
+    WaveType.circlePulse => _CircleSourceForm(
         source: source,
         size: size
     ),
@@ -167,7 +167,7 @@ class _WaveSourceParameters extends CellComponent {
   };
 }
 
-/// Form for entering the parameters of a point pulse wave source
+/// Form for entering the parameters of a point wave source
 class _PointSourceForm extends CellComponent {
   /// Meta cell injected with a cell that constructs the wave source.
   final MetaCell<WaveSource> source;
@@ -224,50 +224,46 @@ class _PointSourceForm extends CellComponent {
           title: 'Frequency',
           value: pointSource.frequency,
           min: 0,
-          step: 0.1,
           enabled: !isPulse()
       )
     ]);
   }
 }
 
-/// Form for entering the parameters of a circular pulse wave source.
-class _CirclePulseForm extends CellComponent {
+/// Form for entering the parameters of a circular wave source.
+class _CircleSourceForm extends CellComponent {
   /// Meta cell injected with a cell that constructs the wave source.
   final MetaCell<WaveSource> source;
 
   /// The size of the grid
   final ValueCell<int> size;
 
-  const _CirclePulseForm({
+  const _CircleSourceForm({
     required this.source,
     required this.size
   });
 
   @override
   Component build(BuildContext context) {
-    final center = MutableCell(
-        VectorI(
-            x: 0,
-            y: 0
-        )
+    final circleSource = MutableCell(
+      CircleSource(
+        center: VectorI(x: 0, y:0),
+        radius: 5,
+        amplitude: -1
+      )
     );
 
-    final radius = MutableCell(5);
-    final amplitude = MutableCell(-1.0);
 
-    source.inject(
-        ValueCell.computed(() => CirclePulse(
-            center: center(),
-            radius: radius(),
-            amplitude: amplitude()
-        ))
-    );
+    final isPulse = MutableCell.computed(() => circleSource.maxSteps() == 1, (pulse) {
+      circleSource.maxSteps.value = pulse ? 1 : null;
+    });
+
+    source.inject(circleSource);
 
     return fragment([
       IntVectorField(
           title: 'Centre',
-          value: center,
+          value: circleSource.center,
           required: true,
 
           min: VectorI(
@@ -282,15 +278,25 @@ class _CirclePulseForm extends CellComponent {
       ),
       IntegerField(
         title: 'Radius',
-        value: radius,
+        value: circleSource.radius,
         required: true,
         min: 1,
         max: (size() / 2).floor(),
       ),
       NumField(
         title: 'Amplitude',
-        value: amplitude,
+        value: circleSource.amplitude,
         required: true
+      ),
+      Checkbox(
+          checked: isPulse,
+          trailing: text('Pulse')
+      ),
+      NumField(
+          title: 'Frequency',
+          value: circleSource.frequency,
+          min: 0,
+          enabled: !isPulse()
       )
     ]);
   }

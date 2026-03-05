@@ -1,18 +1,23 @@
 import 'dart:math';
 
-import '../simulator/wave_source.dart';
+import 'package:live_cells_core/live_cells_core.dart';
+
+import 'alternating_source.dart';
 import '../simulator/wavesim_engine_2d.dart';
 import '../util/types.dart';
 
-/// A wave source that creates a pulse at the perimeter of a circle
+part 'circle_source.g.dart';
+
+/// A wave source emanating from the perimeter of a circle
 ///
-/// The pulse is created at the perimeter of the circle with a given [center]
-/// and [radius].
+/// The source creates a wave emanating from the perimeter of the circle with a
+/// given [center] and [radius].
 ///
-/// [amplitude] is the strength of the pulse. If positive, the pulse points
-/// away from the center of the circle. If negative the pulse points towards
-/// the center of the circle
-class CirclePulse implements WaveSource {
+/// [amplitude] is the strength of the wave at the circle. If positive, the
+/// wave points away from the center of the circle. If negative the wave points
+/// towards the center of the circle
+@CellExtension(mutable: true)
+class CircleSource extends AlternatingSource {
   /// The position of the center of the circle
   final VectorI center;
 
@@ -22,10 +27,12 @@ class CirclePulse implements WaveSource {
   /// The strength of the pulse
   final double amplitude;
 
-  const CirclePulse({
+  CircleSource({
     required this.center,
     required this.radius,
-    required this.amplitude
+    required this.amplitude,
+    super.maxSteps,
+    super.frequency = 0
   });
 
   @override
@@ -37,6 +44,8 @@ class CirclePulse implements WaveSource {
     final numPoints = (2 * pi * radius).ceil();
     final tDelta = 2 * pi / numPoints;
 
+    final a = amplitude * scale;
+
     for (var i = 0; i < numPoints; i++) {
       final theta = i * tDelta;
       final x = cos(theta);
@@ -45,11 +54,11 @@ class CirclePulse implements WaveSource {
       engine.displace(
           x: center.x + (x * radius).round(),
           y: center.y + (y * radius).round(),
-          dx: amplitude * x,
-          dy: amplitude * y
+          dx: a * x,
+          dy: a * y
       );
     }
 
-    return false;
+    return super.update(engine);
   }
 }
