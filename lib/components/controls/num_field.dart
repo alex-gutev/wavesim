@@ -45,7 +45,7 @@ class NumField extends CellComponent {
     required this.value,
     this.min,
     this.max,
-    this.step,
+    this.step = 0.01,
     this.required = false,
     this.enabled = true
   });
