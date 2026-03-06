@@ -457,8 +457,7 @@ class _CurlSourceForm extends CellComponent {
     final curl = MutableCell(
         CurlSource(
             center: VectorI(x: 0, y:0),
-            radius: 5,
-            amplitude: -1
+            amplitude: 1
         )
     );
 
@@ -484,13 +483,6 @@ class _CurlSourceForm extends CellComponent {
               x: size(),
               y: size()
           )
-      ),
-      IntegerField(
-        title: 'Radius',
-        value: curl.radius,
-        required: true,
-        min: 1,
-        max: (size() / 2).floor(),
       ),
       NumField(
           title: 'Amplitude',

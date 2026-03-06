@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:live_cells_core/live_cells_core.dart';
 
 import '../util/types.dart';
@@ -14,16 +12,12 @@ class CurlSource extends AlternatingSource {
   /// The center around which the wave curls
   final VectorI center;
 
-  /// The radius of the curl around the [center].
-  final int radius;
-
   /// The amplitude of the curl. If positive, the wave curls clockwise,
   /// otherwise the wave curls anti-clockwise.
   final double amplitude;
 
   CurlSource({
     required this.center,
-    required this.radius,
     required this.amplitude,
     super.frequency = 0,
     super.maxSteps
@@ -33,27 +27,37 @@ class CurlSource extends AlternatingSource {
   bool update(WavesimEngine2D engine) {
     final a = scale * amplitude;
 
-    for (var py = -radius-1; py < radius+1; py++) {
-      for (var px = -radius-1; px < radius+1; px++) {
-        if ((py*py + px*px) < radius*radius) {
-          final theta = atan2(py, px);
+    engine.displace(
+        x: center.x + 1,
+        y: center.y,
+        dx: 0,
+        dy: -a
+    );
 
-          final c = cos(theta);
-          final s = sin(theta);
+    engine.displace(
+        x: center.x - 1,
+        y: center.y,
+        dx: 0,
+        dy: a
+    );
 
-          engine.displace(
-              x: center.x + px,
-              y: center.y + py,
-              dx: -a * s,
-              dy: a * c
-          );
-        }
-      }
-    }
+    engine.displace(
+        x: center.x,
+        y: center.y + 1,
+        dx: a,
+        dy: 0
+    );
+
+    engine.displace(
+        x: center.x,
+        y: center.y - 1,
+        dx: -a,
+        dy: 0
+    );
 
     return super.update(engine);
   }
 
   @override
-  String describe() => 'Curl ($frequency Hz)';
+  String describe() => 'Curl (${center.x}, ${center.y})';
 }
