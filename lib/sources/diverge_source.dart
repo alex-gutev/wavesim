@@ -38,27 +38,27 @@ class DivergeSource extends AlternatingSource {
         x: center.x,
         y: center.y-1,
         dx: 0,
-        dy: a
+        dy: -a
     );
 
     engine.displace(
         x: center.x,
         y: center.y+1,
         dx: 0,
-        dy: -a
+        dy: a
     );
 
     engine.displace(
         x: center.x-1,
         y: center.y,
-        dx: a,
+        dx: -a,
         dy: 0
     );
 
     engine.displace(
         x: center.x+1,
         y: center.y,
-        dx: -a,
+        dx: a,
         dy: 0
     );
 
