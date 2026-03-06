@@ -1,9 +1,7 @@
-import 'dart:math';
-
 import 'package:live_cells_core/live_cells_core.dart';
-import 'package:wavesim/sources/alternating_source.dart';
-import 'package:wavesim/util/types.dart';
 
+import 'alternating_source.dart';
+import '../util/types.dart';
 import '../simulator/wavesim_engine_2d.dart';
 
 part 'diverge_source.g.dart';
