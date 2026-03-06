@@ -5,7 +5,7 @@ import 'package:wavesim/simulator/wavesim_engine_2d.dart';
 /// This interface allows the state of a wave simulator to be modified
 /// in a controller manner. The [update] method is called just before the state
 /// of the simulator is updated at each time step.
-abstract interface class WaveSource {
+abstract class WaveSource {
   /// Update the wave source.
   ///
   /// Implementations of this method should update the state of the wave
@@ -16,4 +16,10 @@ abstract interface class WaveSource {
   /// before the next time step. If false is returned, the source is removed
   /// and [update] is never called again.
   bool update(WavesimEngine2D engine);
+
+  /// Returns a string that describes this wave source.
+  String describe();
+
+  @override
+  String toString() => describe();
 }

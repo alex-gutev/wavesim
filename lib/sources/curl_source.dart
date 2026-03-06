@@ -53,4 +53,7 @@ class CurlSource extends AlternatingSource {
 
     return super.update(engine);
   }
+
+  @override
+  String describe() => 'Curl ($frequency Hz)';
 }

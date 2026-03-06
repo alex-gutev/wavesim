@@ -35,4 +35,7 @@ class CircleStandingWave implements WaveSource {
 
     return false;
   }
+
+  @override
+  String describe() => 'Circular Standing Wave';
 }

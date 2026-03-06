@@ -38,11 +38,16 @@ class WaveSourceControl extends CellComponent {
   Component build(BuildContext context) {
     final open = MutableCell(false);
 
-    return fragment([
+    return Column(classes: 'wave-source-control', [
       _WaveSourceDialog(
         open: open,
         size: size,
         onClose: sources.add,
+      ),
+      Expanded(
+          _WaveSourceList(
+            sources: sources
+          )
       ),
       button(
           onClick: () => open.value = true,
@@ -51,6 +56,55 @@ class WaveSourceControl extends CellComponent {
           ]
       )
     ]);
+  }
+
+  @css
+  static List<StyleRule> get styles => [
+    css('.wave-source-control').styles(
+      height: 100.percent
+    ),
+    css('.wave-source-list').styles(
+      overflow: Overflow.only(
+        y: Overflow.scroll
+      )
+    )
+  ];
+}
+
+/// An item in the wave source list
+class _SourceItem extends StatelessComponent {
+  final WaveSource source;
+
+  const _SourceItem({
+    required this.source
+  });
+
+  @override
+  Component build(BuildContext context) => label([
+    text(source.toString())
+  ]);
+}
+
+/// Displays the list of wave sources
+class _WaveSourceList extends CellComponent {
+  /// List of wave sources
+  final ValueCell<List<WaveSource>> sources;
+
+  const _WaveSourceList({
+    required this.sources
+  });
+
+  @override
+  Component build(BuildContext context) {
+    return Column(
+        classes: 'wave-source-list',
+        [
+          for (final source in sources())
+            _SourceItem(
+                source: source
+            )
+        ]
+    );
   }
 }
 

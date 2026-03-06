@@ -2,7 +2,8 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
-import '../../components/layout/index.dart';
+import '../../constants/theme.dart';
+import 'wave_source_control.dart';
 import '../../components/wavesim/index.dart';
 import 'wavesim_controls.dart';
 
@@ -27,6 +28,12 @@ class Simulation extends CellComponent {
         WavesimControls(
             state: simState,
             clear: clear
+        )
+      ]),
+      div(classes: 'wave-sources', [
+        WaveSourceControl(
+            sources: simState.sources,
+            size: simState.size
         )
       ]),
       main_([
@@ -55,12 +62,14 @@ class Simulation extends CellComponent {
             rows: GridTracks([
               GridTrack(TrackSize.auto),
               GridTrack(TrackSize.fr(1)),
+              GridTrack(TrackSize.fr(1)),
               GridTrack(TrackSize.auto)
             ]),
 
             areas: GridAreas([
               'hd hd',
               'sd main',
+              'wv main',
               'ft ft'
             ])
         )
@@ -69,7 +78,29 @@ class Simulation extends CellComponent {
 
       css('> .simulation-controls').styles(
         gridPlacement: GridPlacement.area('sd'),
-        padding: Padding.all(0.5.rem)
+        padding: Padding.all(0.5.rem),
+
+        border: Border.only(
+            right: BorderSide.solid(
+                width: 2.px,
+                color: Theme.border
+            )
+        )
+      ),
+
+      css('> .wave-sources').styles(
+        gridPlacement: GridPlacement.area('wv'),
+        padding: Padding.all(0.5.rem),
+        border: Border.only(
+          top: BorderSide.solid(
+            width: 2.px,
+            color: Theme.border
+          ),
+          right: BorderSide.solid(
+              width: 2.px,
+              color: Theme.border
+          )
+        )
       ),
 
       css('> main').styles(

@@ -8,7 +8,6 @@ import '../../components/wavesim/index.dart';
 import 'graphics_control.dart';
 import 'size_control.dart';
 import 'speed_control.dart';
-import 'wave_source_control.dart';
 import 'wave_speed_control.dart';
 
 /// Provides controls for changing the simulation settings.
@@ -59,10 +58,6 @@ class WavesimControls extends CellComponent {
           GraphicsControls(
               graphics: state.graphics
           ),
-          WaveSourceControl(
-              sources: state.sources,
-              size: state.size
-          )
         ]
     );
   }

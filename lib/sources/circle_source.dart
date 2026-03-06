@@ -61,4 +61,7 @@ class CircleSource extends AlternatingSource {
 
     return super.update(engine);
   }
+
+  @override
+  String describe() => 'Circle ($frequency Hz)';
 }

@@ -38,4 +38,7 @@ class PointSource extends AlternatingSource {
 
     return super.update(engine);
   }
+
+  @override
+  String describe() => 'Point ($frequency Hz)';
 }

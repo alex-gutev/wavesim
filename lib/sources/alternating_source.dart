@@ -14,7 +14,7 @@ part 'alternating_source.g.dart';
 /// be used to create a source that is only kept for a given number of timesteps,
 /// which is given by [maxSteps].
 @CellExtension()
-abstract class AlternatingSource implements WaveSource {
+abstract class AlternatingSource extends WaveSource {
   /// Frequency of the wave
   final double frequency;
 
