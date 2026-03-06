@@ -9,6 +9,8 @@ import '../../simulator/wave_source.dart';
 import '../../sources/point_source.dart';
 import '../../sources/curl_source.dart';
 import '../../sources/circle_source.dart';
+import '../../sources/diverge_source.dart';
+import '../../sources/line_source.dart';
 import '../../sources/circle_standing_wave.dart';
 import '../../util/extensions.dart';
 import '../../util/types.dart';
@@ -16,8 +18,10 @@ import '../../util/types.dart';
 /// Identifies the type of wave source
 enum WaveType {
   point,
+  line,
   circle,
   curl,
+  diverge,
   circleStandingWave
 }
 
@@ -154,7 +158,9 @@ class _WaveSourceDialog extends CellComponent {
                     selected: type,
                     builder: (context, type) => switch (type) {
                       WaveType.point => text('Point'),
+                      WaveType.line => text('Line'),
                       WaveType.circle => text('Circle'),
+                      WaveType.diverge => text('Divergence'),
                       WaveType.curl => text('Curl'),
                       WaveType.circleStandingWave => text('Circular Standing Wave'),
                     }
@@ -207,7 +213,17 @@ class _WaveSourceParameters extends CellComponent {
         size: size
     ),
 
+    WaveType.line => _LineSourceForm(
+        source: source,
+        size: size
+    ),
+
     WaveType.circle => _CircleSourceForm(
+        source: source,
+        size: size
+    ),
+
+    WaveType.diverge => _DivergeSourceForm(
         source: source,
         size: size
     ),
@@ -359,6 +375,70 @@ class _CircleSourceForm extends CellComponent {
   }
 }
 
+/// Form for entering the parameters of a divergence wave source.
+class _DivergeSourceForm extends CellComponent {
+  /// Meta cell injected with a cell that constructs the wave source.
+  final MetaCell<WaveSource> source;
+
+  /// The size of the grid
+  final ValueCell<int> size;
+
+  const _DivergeSourceForm({
+    required this.source,
+    required this.size
+  });
+
+  @override
+  Component build(BuildContext context) {
+    final divergence = MutableCell(
+        DivergeSource(
+            center: VectorI(x: 0, y:0),
+            amplitude: 1
+        )
+    );
+
+
+    final isPulse = MutableCell.computed(() => divergence.maxSteps() == 1, (pulse) {
+      divergence.maxSteps.value = pulse ? 1 : null;
+    });
+
+    source.inject(divergence);
+
+    return fragment([
+      IntVectorField(
+          title: 'Centre',
+          value: divergence.center,
+          required: true,
+
+          min: VectorI(
+              x: -size(),
+              y: -size()
+          ),
+
+          max: VectorI(
+              x: size(),
+              y: size()
+          )
+      ),
+      NumField(
+          title: 'Amplitude',
+          value: divergence.amplitude,
+          required: true
+      ),
+      Checkbox(
+          checked: isPulse,
+          trailing: text('Pulse')
+      ),
+      NumField(
+          title: 'Frequency',
+          value: divergence.frequency,
+          min: 0,
+          enabled: !isPulse()
+      )
+    ]);
+  }
+}
+
 /// Form for entering the parameters of a curl wave source.
 class _CurlSourceForm extends CellComponent {
   /// Meta cell injected with a cell that constructs the wave source.
@@ -424,6 +504,85 @@ class _CurlSourceForm extends CellComponent {
       NumField(
           title: 'Frequency',
           value: curl.frequency,
+          min: 0,
+          enabled: !isPulse()
+      )
+    ]);
+  }
+}
+
+/// Form for entering the parameters of a line wave source.
+class _LineSourceForm extends CellComponent {
+  /// Meta cell injected with a cell that constructs the wave source.
+  final MetaCell<WaveSource> source;
+
+  /// The size of the grid
+  final ValueCell<int> size;
+
+  const _LineSourceForm({
+    required this.source,
+    required this.size
+  });
+
+  @override
+  Component build(BuildContext context) {
+    final line = MutableCell(
+        LineSource(
+          start: VectorI(x: 0, y: 0),
+          end: VectorI(x: 0, y: 0),
+          amplitude: VectorF(x: 0, y: 0),
+        )
+    );
+
+    final isPulse = MutableCell.computed(() => line.maxSteps() == 1, (pulse) {
+      line.maxSteps.value = pulse ? 1 : null;
+    });
+
+    source.inject(line);
+
+    return fragment([
+      IntVectorField(
+          title: 'Start',
+          value: line.start,
+          required: true,
+
+          min: VectorI(
+              x: -size(),
+              y: -size()
+          ),
+
+          max: VectorI(
+              x: size(),
+              y: size()
+          )
+      ),
+      IntVectorField(
+          title: 'End',
+          value: line.end,
+          required: true,
+
+          min: VectorI(
+              x: -size(),
+              y: -size()
+          ),
+
+          max: VectorI(
+              x: size(),
+              y: size()
+          )
+      ),
+      NumVectorField(
+          title: 'Amplitude',
+          value: line.amplitude,
+          required: true
+      ),
+      Checkbox(
+          checked: isPulse,
+          trailing: text('Pulse')
+      ),
+      NumField(
+          title: 'Frequency',
+          value: line.frequency,
           min: 0,
           enabled: !isPulse()
       )
