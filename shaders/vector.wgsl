@@ -22,7 +22,11 @@ fn vert_main(@builtin(instance_index) i: u32, @location(0) u: vec2f, @location(1
     let magnitude = max(0.1, sqrt(u[0]*u[0] + u[1]*u[1]));
     let angle = atan2(u[1], u[0]) - radians(90);
 
-    let scale = mat2x2(magnitude, 0, 0, magnitude);
+    let scale = mat2x2(
+        clampTanh(magnitude), 0,
+        0, magnitude
+    );
+
     let rotate = mat2x2(
         cos(angle), sin(angle),
         -sin(angle), cos(angle)
@@ -45,3 +49,8 @@ fn frag_main() -> @location(0) vec4f {
     return vec4f(0, 0, 1, 1);
 }
 
+// Compute tanh while clamping x to +/- 20.0 to prevent inf values.
+fn clampTanh(x: f32) -> f32 {
+    let clamped = clamp(x, -20.0, 20.0);
+    return tanh(clamped);
+}
