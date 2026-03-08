@@ -4,6 +4,7 @@ import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
 
+import '../../simulator/color_renderer.dart';
 import '../../simulator/wave_source.dart';
 import '../../simulator/wavesim2d.dart';
 import '../../simulator/vector_renderer.dart';
@@ -135,6 +136,18 @@ class _WavesimManagerState extends State<WavesimManager> {
     WavesimGraphics.heatmap => HeatmapRenderer(
       device: component.device,
       context: canvas.getContext('webgpu') as GPUCanvasContext,
+    ),
+
+    WavesimGraphics.colorX => ColorRenderer(
+        device: component.device,
+        context: canvas.getContext('webgpu') as GPUCanvasContext,
+        component: 0
+    ),
+
+    WavesimGraphics.colorY => ColorRenderer(
+        device: component.device,
+        context: canvas.getContext('webgpu') as GPUCanvasContext,
+        component: 1
     ),
   };
 

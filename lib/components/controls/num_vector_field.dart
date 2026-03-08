@@ -29,7 +29,7 @@ class NumVectorField extends CellComponent {
   final VectorF? max;
 
   /// The step between allowed values.
-  final VectorF? step;
+  final VectorF step;
 
   /// Is this a required field?
   ///
@@ -44,7 +44,7 @@ class NumVectorField extends CellComponent {
     required this.value,
     this.min,
     this.max,
-    this.step,
+    this.step = const VectorF(x: 0.01, y: 0.01),
     this.required = false
   });
 
