@@ -42,6 +42,7 @@ class Wavesim2d implements WavesimEngine2D {
   }
 
   /// The current simulation time
+  @override
   int get time => _time;
 
   /// Energy transfer coefficient in the range (0, 1].
@@ -221,8 +222,6 @@ class Wavesim2d implements WavesimEngine2D {
 
   /// Update the state of the simulation by a single step.
   Future<void> update() async {
-    _time++;
-
     final bindGroup = _buffers.isFirst ? _bindGroup1 : _bindGroup2;
     final encoder = device.createCommandEncoder();
 
@@ -252,6 +251,7 @@ class Wavesim2d implements WavesimEngine2D {
     await device.queue.onSubmittedWorkDone().toDart;
 
     _buffers.swap();
+    _time++;
   }
 
   /// Render the current state of the simulator

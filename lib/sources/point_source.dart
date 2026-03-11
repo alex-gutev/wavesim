@@ -27,18 +27,18 @@ class PointSource extends AlternatingSource {
 
   @override
   bool update(WavesimEngine2D engine) {
-    final f = scale;
+    final s = scale(engine);
 
     engine.displace(
         x: position.x,
         y: position.y,
-        dx: f * amplitude.x,
-        dy: f * amplitude.y
+        dx: s * amplitude.x,
+        dy: s * amplitude.y
     );
 
     return super.update(engine);
   }
 
   @override
-  String describe() => 'Point ($frequency Hz)';
+  String describe() => 'Point (${position.x}, ${position.y})';
 }

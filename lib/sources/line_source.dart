@@ -32,6 +32,10 @@ class LineSource extends AlternatingSource {
   bool update(WavesimEngine2D engine) {
     final d = sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2)).ceil();
 
+    final s = scale(engine);
+    final ax = s * amplitude.x;
+    final ay = s * amplitude.y;
+
     if (d > 0) {
       final dx = (end.x - start.x) / d;
       final dy = (end.y - start.y) / d;
@@ -43,8 +47,8 @@ class LineSource extends AlternatingSource {
         engine.displace(
             x: x.round(),
             y: y.round(),
-            dx: scale * amplitude.x,
-            dy: scale * amplitude.y
+            dx: ax,
+            dy: ay
         );
 
         x += dx;

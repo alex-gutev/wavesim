@@ -25,7 +25,7 @@ class CurlSource extends AlternatingSource {
 
   @override
   bool update(WavesimEngine2D engine) {
-    final a = scale * amplitude;
+    final a = scale(engine) * amplitude;
 
     engine.displace(
         x: center.x + 1,

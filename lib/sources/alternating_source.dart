@@ -18,19 +18,24 @@ abstract class AlternatingSource extends WaveSource {
   /// Frequency of the wave
   final double frequency;
 
+  /// The phase of the wave (relative to global time)
+  final double phase;
+
   /// The maximum number of time steps for which the source should be kept.
   ///
   /// If null the source is kept indefinitely. If null, the source is only kept
   /// for this number of time steps.
   final int? maxSteps;
 
-  /// The scale by which to multiply the amplitude at the current time.
-  double get scale => cos(pi * frequency * _time / 10);
-
   AlternatingSource({
     required this.frequency,
-    required this.maxSteps
+    required this.maxSteps,
+    this.phase = 0
   });
+
+  /// The scale by which to multiply the amplitude at the current time.
+  double scale(WavesimEngine2D engine) =>
+      cos(pi * frequency * (engine.time + phase) / 10);
 
   @override
   @mustCallSuper

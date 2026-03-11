@@ -44,7 +44,7 @@ class CircleSource extends AlternatingSource {
     final numPoints = (2 * pi * radius).ceil();
     final tDelta = 2 * pi / numPoints;
 
-    final a = amplitude * scale;
+    final a = amplitude * scale(engine);
 
     for (var i = 0; i < numPoints; i++) {
       final theta = i * tDelta;
@@ -63,5 +63,5 @@ class CircleSource extends AlternatingSource {
   }
 
   @override
-  String describe() => 'Circle ($frequency Hz)';
+  String describe() => 'Circle (${center.x}, ${center.y})';
 }

@@ -1,5 +1,8 @@
 /// Wave simulation engine interface
 abstract interface class WavesimEngine2D {
+  /// Number of time steps for which the simulation has been running.
+  int get time;
+
   /// Displace a granule at a given point ([x], [y]).
   ///
   /// [dx] is the magnitude of the displacement along the x-axis and [dy] is
