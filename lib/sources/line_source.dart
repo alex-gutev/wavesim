@@ -30,28 +30,26 @@ class LineSource extends AlternatingSource {
 
   @override
   bool update(WavesimEngine2D engine) {
-    final dx = end.x - start.x;
-    final dy = end.y - start.y;
+    final d = sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2)).ceil();
 
-    final m = dy / dx;
+    if (d > 0) {
+      final dx = (end.x - start.x) / d;
+      final dy = (end.y - start.y) / d;
 
-    var curY = start.y;
+      var x = start.x.toDouble();
+      var y = start.y.toDouble();
 
-    print('(${start.x}, ${start.y}) - (${end.x}, ${end.y}) ($m)');
-
-    for (var x = start.x; x <= end.x; x++) {
-      final endY = (curY+m).ceil();
-
-      for (var y = curY; y <= endY; y++) {
+      for (var i = 0; i < d; i++) {
         engine.displace(
-            x: x,
-            y: y,
+            x: x.round(),
+            y: y.round(),
             dx: scale * amplitude.x,
             dy: scale * amplitude.y
         );
-      }
 
-      curY = endY;
+        x += dx;
+        y += dy;
+      }
     }
 
     return super.update(engine);
