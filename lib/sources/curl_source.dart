@@ -20,6 +20,7 @@ class CurlSource extends AlternatingSource {
     required this.center,
     required this.amplitude,
     super.frequency = 0,
+    super.phase = 0,
     super.maxSteps
   });
 

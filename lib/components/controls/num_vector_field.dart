@@ -60,7 +60,7 @@ class NumVectorField extends CellComponent {
             value: value.x,
             min: min?.x,
             max: max?.x,
-            step: step?.x,
+            step: step.x,
             required: required,
 
             title: 'X'
@@ -69,7 +69,7 @@ class NumVectorField extends CellComponent {
             value: value.y,
             min: min?.y,
             max: max?.y,
-            step: step?.y,
+            step: step.y,
             required: required,
 
             title: 'Y'

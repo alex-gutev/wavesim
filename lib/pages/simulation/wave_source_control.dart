@@ -22,7 +22,6 @@ enum WaveType {
   circle,
   curl,
   diverge,
-  circleStandingWave
 }
 
 /// A button for adding a wave source to the simulation
@@ -162,7 +161,6 @@ class _WaveSourceDialog extends CellComponent {
                       WaveType.circle => text('Circle'),
                       WaveType.diverge => text('Divergence'),
                       WaveType.curl => text('Curl'),
-                      WaveType.circleStandingWave => text('Circular Standing Wave'),
                     }
                 ),
                 _WaveSourceParameters(
@@ -232,11 +230,6 @@ class _WaveSourceParameters extends CellComponent {
       source: source,
       size: size
     ),
-
-    WaveType.circleStandingWave => _CircleStandingWaveForm(
-        source: source,
-        size: size
-    ),
   };
 }
 
@@ -255,23 +248,19 @@ class _PointSourceForm extends CellComponent {
 
   @override
   Component build(BuildContext context) {
-    final pointSource = MutableCell(
+    final point = MutableCell(
       PointSource(
         position: VectorI(x: 0, y: 0),
         amplitude: VectorF(x: 0, y: 0),
       )
     );
 
-    final isPulse = MutableCell.computed(() => pointSource.maxSteps() == 1, (pulse) {
-      pointSource.maxSteps.value = pulse ? 1 : null;
-    });
-
-    source.inject(pointSource);
+    source.inject(point);
 
     return fragment([
       IntVectorField(
           title: 'Position',
-          value: pointSource.position,
+          value: point.position,
           required: true,
 
           min: VectorI(
@@ -286,19 +275,14 @@ class _PointSourceForm extends CellComponent {
       ),
       NumVectorField(
         title: 'Amplitude',
-        value: pointSource.amplitude,
+        value: point.amplitude,
         required: true
       ),
-      Checkbox(
-        checked: isPulse,
-        trailing: text('Pulse')
+      _FrequencyControls(
+          frequency: point.frequency,
+          phase: point.phase,
+          maxSteps: point.maxSteps
       ),
-      NumField(
-          title: 'Frequency',
-          value: pointSource.frequency,
-          min: 0,
-          enabled: !isPulse()
-      )
     ]);
   }
 }
@@ -318,7 +302,7 @@ class _CircleSourceForm extends CellComponent {
 
   @override
   Component build(BuildContext context) {
-    final circleSource = MutableCell(
+    final circle = MutableCell(
       CircleSource(
         center: VectorI(x: 0, y:0),
         radius: 5,
@@ -327,16 +311,12 @@ class _CircleSourceForm extends CellComponent {
     );
 
 
-    final isPulse = MutableCell.computed(() => circleSource.maxSteps() == 1, (pulse) {
-      circleSource.maxSteps.value = pulse ? 1 : null;
-    });
-
-    source.inject(circleSource);
+    source.inject(circle);
 
     return fragment([
       IntVectorField(
           title: 'Centre',
-          value: circleSource.center,
+          value: circle.center,
           required: true,
 
           min: VectorI(
@@ -351,26 +331,21 @@ class _CircleSourceForm extends CellComponent {
       ),
       IntegerField(
         title: 'Radius',
-        value: circleSource.radius,
+        value: circle.radius,
         required: true,
         min: 1,
         max: (size() / 2).floor(),
       ),
       NumField(
         title: 'Amplitude',
-        value: circleSource.amplitude,
+        value: circle.amplitude,
         required: true
       ),
-      Checkbox(
-          checked: isPulse,
-          trailing: text('Pulse')
+      _FrequencyControls(
+          frequency: circle.frequency,
+          phase: circle.phase,
+          maxSteps: circle.maxSteps
       ),
-      NumField(
-          title: 'Frequency',
-          value: circleSource.frequency,
-          min: 0,
-          enabled: !isPulse()
-      )
     ]);
   }
 }
@@ -397,11 +372,6 @@ class _DivergeSourceForm extends CellComponent {
         )
     );
 
-
-    final isPulse = MutableCell.computed(() => divergence.maxSteps() == 1, (pulse) {
-      divergence.maxSteps.value = pulse ? 1 : null;
-    });
-
     source.inject(divergence);
 
     return fragment([
@@ -425,15 +395,10 @@ class _DivergeSourceForm extends CellComponent {
           value: divergence.amplitude,
           required: true
       ),
-      Checkbox(
-          checked: isPulse,
-          trailing: text('Pulse')
-      ),
-      NumField(
-          title: 'Frequency',
-          value: divergence.frequency,
-          min: 0,
-          enabled: !isPulse()
+      _FrequencyControls(
+          frequency: divergence.frequency,
+          phase: divergence.phase,
+          maxSteps: divergence.maxSteps
       )
     ]);
   }
@@ -461,11 +426,6 @@ class _CurlSourceForm extends CellComponent {
         )
     );
 
-
-    final isPulse = MutableCell.computed(() => curl.maxSteps() == 1, (pulse) {
-      curl.maxSteps.value = pulse ? 1 : null;
-    });
-
     source.inject(curl);
 
     return fragment([
@@ -489,15 +449,10 @@ class _CurlSourceForm extends CellComponent {
           value: curl.amplitude,
           required: true
       ),
-      Checkbox(
-          checked: isPulse,
-          trailing: text('Pulse')
-      ),
-      NumField(
-          title: 'Frequency',
-          value: curl.frequency,
-          min: 0,
-          enabled: !isPulse()
+      _FrequencyControls(
+          frequency: curl.frequency,
+          phase: curl.phase,
+          maxSteps: curl.maxSteps
       )
     ]);
   }
@@ -525,10 +480,6 @@ class _LineSourceForm extends CellComponent {
           amplitude: VectorF(x: 0, y: 0),
         )
     );
-
-    final isPulse = MutableCell.computed(() => line.maxSteps() == 1, (pulse) {
-      line.maxSteps.value = pulse ? 1 : null;
-    });
 
     source.inject(line);
 
@@ -568,80 +519,52 @@ class _LineSourceForm extends CellComponent {
           value: line.amplitude,
           required: true
       ),
+      _FrequencyControls(
+          frequency: line.frequency,
+          phase: line.phase,
+          maxSteps: line.maxSteps
+      )
+    ]);
+  }
+}
+
+/// Displays controls for the [frequency] and [phase] of a wave source.
+class _FrequencyControls extends CellComponent {
+  /// Cell holding the [frequency]
+  final MutableCell<num> frequency;
+
+  /// Cell holding the [phase]
+  final MutableCell<num> phase;
+
+  /// Cell holding the number of time steps for which the source is kept.
+  final MutableCell<int?> maxSteps;
+
+  const _FrequencyControls({
+    required this.frequency,
+    required this.phase,
+    required this.maxSteps
+  });
+
+  @override
+  Component build(BuildContext context) {
+    final isPulse = MutableCell.computed(() => maxSteps() == 1, (pulse) {
+      maxSteps.value = pulse ? 1 : null;
+    });
+
+    return fragment([
       Checkbox(
           checked: isPulse,
           trailing: text('Pulse')
       ),
       NumField(
           title: 'Frequency',
-          value: line.frequency,
+          value: frequency,
           min: 0,
           enabled: !isPulse()
-      )
-    ]);
-  }
-}
-
-/// Form for entering the parameters of a circular pulse wave source.
-class _CircleStandingWaveForm extends CellComponent {
-  /// Meta cell injected with a cell that constructs the wave source.
-  final MetaCell<WaveSource> source;
-
-  /// The size of the grid
-  final ValueCell<int> size;
-
-  const _CircleStandingWaveForm({
-    required this.source,
-    required this.size
-  });
-
-  @override
-  Component build(BuildContext context) {
-    final center = MutableCell(
-        VectorI(
-            x: 0,
-            y: 0
-        )
-    );
-
-    final radius = MutableCell(5);
-    final amplitude = MutableCell(-1.0);
-
-    source.inject(
-        ValueCell.computed(() => CircleStandingWave(
-            center: center(),
-            radius: radius(),
-            amplitude: amplitude()
-        ))
-    );
-
-    return fragment([
-      IntVectorField(
-          title: 'Centre',
-          value: center,
-          required: true,
-
-          min: VectorI(
-              x: -size(),
-              y: -size()
-          ),
-
-          max: VectorI(
-              x: size(),
-              y: size()
-          )
-      ),
-      IntegerField(
-          title: 'Radius',
-          value: radius,
-          required: true,
-          min: 1,
-          max: (size() / 2).floor()
       ),
       NumField(
-        title: 'Amplitude',
-        value: amplitude,
-        required: true
+        title: 'Phase',
+        value: phase,
       )
     ]);
   }

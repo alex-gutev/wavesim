@@ -22,7 +22,8 @@ class PointSource extends AlternatingSource {
     required this.position,
     required this.amplitude,
     super.maxSteps,
-    super.frequency = 0
+    super.frequency = 0,
+    super.phase = 0
   });
 
   @override

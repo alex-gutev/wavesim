@@ -22,6 +22,7 @@ class LineSource extends AlternatingSource {
 
   LineSource({
     super.frequency = 0,
+    super.phase = 0,
     super.maxSteps,
     required this.start,
     required this.end,

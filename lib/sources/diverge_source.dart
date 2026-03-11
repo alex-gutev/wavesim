@@ -23,6 +23,7 @@ class DivergeSource extends AlternatingSource {
 
   DivergeSource({
     super.frequency = 0,
+    super.phase = 0,
     super.maxSteps,
     required this.center,
     required this.amplitude

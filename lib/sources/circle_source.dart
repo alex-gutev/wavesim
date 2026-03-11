@@ -32,7 +32,8 @@ class CircleSource extends AlternatingSource {
     required this.radius,
     required this.amplitude,
     super.maxSteps,
-    super.frequency = 0
+    super.frequency = 0,
+    super.phase = 0
   });
 
   @override

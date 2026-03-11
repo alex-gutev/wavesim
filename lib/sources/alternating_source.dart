@@ -30,7 +30,7 @@ abstract class AlternatingSource extends WaveSource {
   AlternatingSource({
     required this.frequency,
     required this.maxSteps,
-    this.phase = 0
+    required this.phase
   });
 
   /// The scale by which to multiply the amplitude at the current time.
