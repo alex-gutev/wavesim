@@ -21,9 +21,9 @@ class GraphicsControls extends CellComponent {
         builder: (_, type) => switch (type) {
           WavesimGraphics.vector => text('Vectors'),
           WavesimGraphics.blocks => text('Blocks'),
-          WavesimGraphics.heatmap => text('Heatmap'),
-          WavesimGraphics.colorX => text('Color X'),
-          WavesimGraphics.colorY => text('Color Y'),
+          WavesimGraphics.heatmap => text('Density'),
+          WavesimGraphics.colorX => text('X Amplitude'),
+          WavesimGraphics.colorY => text('Y Amplitude'),
         }
     )
   ]);
