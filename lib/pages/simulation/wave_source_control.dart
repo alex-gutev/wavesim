@@ -2,11 +2,15 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
+import '../../components/icon.dart';
+import '../../constants/button_styles.dart';
+import '../../constants/icons.dart';
 import '../../components/controls/index.dart';
 import '../../components/dialog/index.dart';
 import '../../components/layout/index.dart';
 import '../../components/wave_sources/index.dart';
 import '../../simulator/wave_source.dart';
+import '../../sources/index.dart';
 import '../../util/extensions.dart';
 
 /// Identifies the type of wave source
@@ -43,7 +47,8 @@ class WaveSourceControl extends CellComponent {
       ),
       Expanded(
           _WaveSourceList(
-            sources: sources
+            sources: sources,
+            size: size
           )
       ),
       button(
@@ -69,26 +74,59 @@ class WaveSourceControl extends CellComponent {
 }
 
 /// An item in the wave source list
-class _SourceItem extends StatelessComponent {
-  final WaveSource source;
+class _SourceItem extends CellComponent {
+  /// Cell holding the details of the wave source
+  final MutableCell<WaveSource> source;
+
+  /// The size of the simulation grid
+  final ValueCell<int> size;
 
   const _SourceItem({
-    required this.source
+    required this.source,
+    required this.size
   });
 
   @override
-  Component build(BuildContext context) => label([
-    text(source.toString())
-  ]);
+  Component build(BuildContext context) {
+    final open = MutableCell(false);
+
+    return div([
+      _EditWaveSourceDialog(
+          open: open,
+          size: size,
+          source: source
+      ),
+      CellComponent.builder((_) => Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          [
+            button(
+                classes: ButtonStyles.icon,
+                type: ButtonType.button,
+                onClick: () => open.value = true,
+                [
+                  Icon(
+                    src: Icons.edit,
+                  )
+                ]
+            ),
+            text(source().toString())
+          ]
+      ))
+    ]);
+  }
 }
 
 /// Displays the list of wave sources
 class _WaveSourceList extends CellComponent {
   /// List of wave sources
-  final ValueCell<List<WaveSource>> sources;
+  final MutableCell<List<WaveSource>> sources;
+
+  /// Size of the simulation grid
+  final ValueCell<int> size;
 
   const _WaveSourceList({
-    required this.sources
+    required this.sources,
+    required this.size
   });
 
   @override
@@ -96,9 +134,10 @@ class _WaveSourceList extends CellComponent {
     return Column(
         classes: 'wave-source-list',
         [
-          for (final source in sources())
+          for (var i = 0; i < sources.length(); i++)
             _SourceItem(
-                source: source
+              source: sources[i.cell],
+              size: size
             )
         ]
     );
@@ -224,5 +263,102 @@ class _WaveSourceParameters extends CellComponent {
       source: source,
       size: size
     ),
+  };
+}
+
+/// Dialog for editing the details of a wave source.
+class _EditWaveSourceDialog extends CellComponent {
+  /// Cell controlling whether the dialog is open
+  final MutableCell<bool> open;
+
+  /// Cell holding the size of the simulation grid
+  final ValueCell<int> size;
+
+  /// Cell holding the wave source details
+  final MutableCell<WaveSource> source;
+
+  const _EditWaveSourceDialog({
+    super.key,
+    required this.open,
+    required this.size,
+    required this.source
+  });
+
+  @override
+  Component build(BuildContext context) {
+    final close = ActionCell();
+
+    return Dialog(
+      open: open,
+      [
+        Form(
+            submit: close,
+            method: FormMethod.dialog,
+            [
+              Column([
+                _EditSourceForm(
+                    source: source,
+                    size: size
+                ),
+                button([
+                  text('Close')
+                ])
+              ])
+            ]
+        )
+      ]
+    );
+  }
+}
+
+/// Form for editing the details of a wave source
+class _EditSourceForm extends CellComponent {
+  /// Cell holding the details of the wave source
+  final MutableCell<WaveSource> source;
+
+  /// The size of the simulation grid
+  final ValueCell<int> size;
+
+  const _EditSourceForm({
+    required this.source,
+    required this.size
+  });
+
+  @override
+  Component build(BuildContext context) => switch (source()) {
+    PointSource _ => PointSourceForm(
+        source: source.transform(),
+        size: size,
+        isEdit: true
+    ),
+
+    LineSource _ => LineSourceForm(
+        source: source.transform(),
+        size: size,
+        isEdit: true
+
+    ),
+
+    CircleSource _ => CircleSourceForm(
+        source: source.transform(),
+        size: size,
+        isEdit: true
+
+    ),
+
+    DivergeSource _ => DivergeSourceForm(
+        source: source.transform(),
+        size: size,
+        isEdit: true
+
+    ),
+
+    CurlSource _ => CurlSourceForm(
+        source: source.transform(),
+        size: size,
+        isEdit: true
+    ),
+
+    _ => throw UnimplementedError()
   };
 }
