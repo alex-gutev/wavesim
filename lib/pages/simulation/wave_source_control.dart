@@ -78,12 +78,16 @@ class _SourceItem extends CellComponent {
   /// Cell holding the details of the wave source
   final MutableCell<WaveSource> source;
 
+  /// Delete button press callback function
+  final VoidCallback delete;
+
   /// The size of the simulation grid
   final ValueCell<int> size;
 
   const _SourceItem({
     required this.source,
-    required this.size
+    required this.size,
+    required this.delete
   });
 
   @override
@@ -109,7 +113,21 @@ class _SourceItem extends CellComponent {
                   )
                 ]
             ),
-            text(source().toString())
+            Expanded(
+              span([
+                text(source().toString())
+              ])
+            ),
+            button(
+              classes: '${ButtonStyles.icon} ${ButtonStyles.destructive}',
+              type: ButtonType.button,
+              onClick: delete,
+              [
+                Icon(
+                  src: Icons.minus
+                )
+              ]
+            )
           ]
       ))
     ]);
@@ -137,7 +155,8 @@ class _WaveSourceList extends CellComponent {
           for (var i = 0; i < sources.length(); i++)
             _SourceItem(
               source: sources[i.cell],
-              size: size
+              size: size,
+              delete: () => sources.removeAt(i)
             )
         ]
     );
