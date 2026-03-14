@@ -17,15 +17,8 @@ fn vertMain(@builtin(instance_index) i: u32, @location(0) pos: vec2f, @location(
 @fragment
 fn fragMain(@location(0) dataPos: vec2f) -> @location(0) vec4f {
     let index = u32(dataPos.y) * size.x + u32(dataPos.x);
-    let coeff = (1 + clampTanh(data[index][component])) / 2;
+    let coeff = (1 + clamp(-1, 1, data[index][component])) / 2;
 
     return mix(loColor, hiColor, coeff);
 }
-
-// Compute tanh while clamping x to +/- 20.0 to prevent inf values.
-fn clampTanh(x: f32) -> f32 {
-    let clamped = clamp(x, -20.0, 20.0);
-    return tanh(clamped);
-}
-
 
