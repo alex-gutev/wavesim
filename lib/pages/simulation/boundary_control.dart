@@ -13,17 +13,13 @@ class BoundaryControl extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return fragment([
-      label([
-        text('Boundary'),
-        Select(
-          options: [false, true],
-          selected: closed,
-          builder: (context, closed) => text(
+    return Select(
+        title: 'Boundary',
+        options: [false, true],
+        selected: closed,
+        builder: (context, closed) => text(
             closed ? 'Closed' : 'Open'
-          )
         )
-      ])
-    ]);
+    );
   }
 }

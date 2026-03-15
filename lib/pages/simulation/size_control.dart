@@ -2,6 +2,8 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
+import '../../components/icon.dart';
+import '../../constants/icons.dart';
 import '../../util/extensions.dart';
 import '../../components/controls/index.dart';
 import '../../components/dialog/index.dart';
@@ -31,7 +33,11 @@ class SizeControl extends CellComponent {
       button(
           onClick: () => open.value = true,
           [
-            text('Change')
+            Icon(
+                src: Icons.edit,
+                label: 'Change',
+                mainAxisAlignment: MainAxisAlignment.center
+            )
           ]
       )
     ]);

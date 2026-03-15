@@ -54,7 +54,11 @@ class WaveSourceControl extends CellComponent {
       button(
           onClick: () => open.value = true,
           [
-            text('Add Wave')
+            Icon(
+              src: Icons.plus,
+              label: 'Add Wave',
+              mainAxisAlignment: MainAxisAlignment.center
+            )
           ]
       )
     ]);

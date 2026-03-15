@@ -3,6 +3,8 @@ import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
 import 'boundary_control.dart';
+import '../../components/icon.dart';
+import '../../constants/icons.dart';
 import '../../components/layout/index.dart';
 import '../../components/wavesim/index.dart';
 import 'graphics_control.dart';
@@ -32,13 +34,8 @@ class WavesimControls extends CellComponent {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.start,
         [
-          button(
-              onClick: () => state.paused.value = !state.paused.value,
-              [
-                text(
-                    state.paused() ? 'Run' : 'Pause'
-                )
-              ]
+          _RunButton(
+              paused: state.paused
           ),
           SizeControl(
               size: state.size
@@ -63,6 +60,34 @@ class WavesimControls extends CellComponent {
   }
 }
 
+/// Button for starting and pausing simulation
+class _RunButton extends CellComponent {
+  final MutableCell<bool> paused;
+
+  const _RunButton({
+    required this.paused
+  });
+
+  @override
+  Component build(BuildContext context) => button(
+      onClick: () => paused.value = !paused.value,
+      [
+        if (paused())
+          Icon(
+            src: Icons.run,
+            label: 'Run',
+            mainAxisAlignment: MainAxisAlignment.center
+          )
+        else
+          Icon(
+            src: Icons.pause,
+            label: 'Pause',
+            mainAxisAlignment: MainAxisAlignment.center
+          )
+      ]
+  );
+}
+
 /// A button for clearing the simulation
 class _ClearButton extends StatelessComponent {
   /// Action cell for clearing the simulation
@@ -74,7 +99,11 @@ class _ClearButton extends StatelessComponent {
   Component build(BuildContext context) => button(
       onClick: clear.trigger,
       [
-        text('Clear')
+        Icon(
+          src: Icons.clear,
+          label: 'Clear',
+          mainAxisAlignment: MainAxisAlignment.center
+        )
       ]
   );
 }
