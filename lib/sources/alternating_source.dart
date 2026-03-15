@@ -16,9 +16,16 @@ part 'alternating_source.g.dart';
 @CellExtension()
 abstract class AlternatingSource extends WaveSource {
   /// Frequency of the wave
+  ///
+  /// The frequency is normalized such that 1Hz = 1 full wavelength in the
+  /// simulation grid.
   final double frequency;
 
-  /// The phase of the wave (relative to global time)
+  /// The phase of the wave.
+  ///
+  /// The phase is expressed as a multiple of pi, that is a phase of 1 means
+  /// the wave is shifted by pi, a phase of 1/2 means the wave is shifted
+  /// by pi/2.
   final double phase;
 
   /// The maximum number of time steps for which the source should be kept.
@@ -35,7 +42,7 @@ abstract class AlternatingSource extends WaveSource {
 
   /// The scale by which to multiply the amplitude at the current time.
   double scale(WavesimEngine2D engine) =>
-      cos(2 * pi * frequency * (engine.time + phase) / engine.size);
+      cos(2 * pi * frequency * engine.time / engine.size + pi * phase);
 
   @override
   @mustCallSuper
