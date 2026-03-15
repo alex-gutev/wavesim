@@ -85,6 +85,34 @@ class VectorRenderer implements WavesimRenderer {
         ].toJS
     );
 
+    _renderPointPipeline = device.createRenderPipeline(
+      RenderPipelineLayout(
+          layout: device.createPipelineLayout(
+            PipelineLayoutDescriptor(
+              bindGroupLayouts: [_bindGroupLayout].toJS
+            )
+          ),
+
+          primitive: Primitive(
+              topology: 'point-list'
+          ),
+
+          vertex: Vertex(
+              module: _shader,
+              buffers: [uBuffer, lineVertBuffer].toJS
+          ),
+
+          fragment: Fragment(
+              module: _shader,
+              targets: [
+                FragmentTarget(
+                    format: format
+                )
+              ].toJS
+          )
+      )
+    );
+
     _renderLinePipeline = device.createRenderPipeline(
       RenderPipelineLayout(
           layout: device.createPipelineLayout(
@@ -189,11 +217,30 @@ class VectorRenderer implements WavesimRenderer {
 
     final view = context.getCurrentTexture();
 
+    final renderPoints = encoder.beginRenderPass(
+        RenderPassDescriptor(
+            colorAttachments: [
+              ColorAttachment(
+                  loadOp: 'clear',
+                  storeOp: 'store',
+                  view: view
+              )
+            ].toJS
+        )
+    );
+
+    renderPoints.setPipeline(_renderPointPipeline);
+    renderPoints.setVertexBuffer(0, _downSampler.output);
+    renderPoints.setVertexBuffer(1, _lineVertBuffer);
+    renderPoints.setBindGroup(0, _uniformBindGroup);
+    renderPoints.draw(1, _downSampler.outputSize * _downSampler.outputSize);
+    renderPoints.end();
+
     final renderLines = encoder.beginRenderPass(
       RenderPassDescriptor(
         colorAttachments: [
           ColorAttachment(
-              loadOp: 'clear',
+              loadOp: 'load',
               storeOp: 'store',
               view: view
           )
@@ -207,7 +254,6 @@ class VectorRenderer implements WavesimRenderer {
     renderLines.setBindGroup(0, _uniformBindGroup);
     renderLines.draw(2, _downSampler.outputSize * _downSampler.outputSize);
     renderLines.end();
-
 
     final renderArrows = encoder.beginRenderPass(
         RenderPassDescriptor(
@@ -256,6 +302,9 @@ class VectorRenderer implements WavesimRenderer {
 
   /// Buffer holding the vertex positions of the vector arrows
   late final GPUBuffer _arrowVertBuffer;
+
+  /// Pipeline for rendering the base points of the vectors
+  late final GPURenderPipeline _renderPointPipeline;
 
   /// Pipeline for rendering the lines of the vectors
   late final GPURenderPipeline _renderLinePipeline;

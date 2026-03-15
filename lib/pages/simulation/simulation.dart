@@ -17,7 +17,7 @@ class Simulation extends CellComponent {
       WavesimState(
         paused: true,
         size: 50,
-        graphics: WavesimGraphics.blocks
+        graphics: WavesimGraphics.vector
       )
     );
 
