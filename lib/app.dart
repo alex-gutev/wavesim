@@ -34,7 +34,11 @@ class AppState extends State<App> {
             child,
           ]),
           routes: [
-            Route(path: '/', title: 'Home', builder: (context, state) => const Simulation()),
+            Route(
+                path: '/',
+                title: 'Wavesim2D',
+                builder: (context, state) => const Simulation()
+            ),
           ],
         ),
       ]),
