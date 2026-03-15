@@ -2,6 +2,7 @@ import 'package:jaspr/jaspr.dart';
 import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 
+import '../../components/gpu/web_gpu_check.dart';
 import '../../constants/theme.dart';
 import 'wave_source_control.dart';
 import '../../components/wavesim/index.dart';
@@ -23,26 +24,29 @@ class Simulation extends CellComponent {
 
     final clear = ActionCell();
 
-    return div(classes: 'simulation-grid', [
-      div(classes: 'simulation-controls', [
-        WavesimControls(
-            state: simState,
-            clear: clear
-        )
-      ]),
-      div(classes: 'wave-sources', [
-        WaveSourceControl(
-            sources: simState.sources,
-            size: simState.size
-        )
-      ]),
-      main_([
-        WavesimCanvas(
-            state: simState,
-            clear: clear
-        ),
+    return WebGPUCheck(
+      builder: (context, device) => div(classes: 'simulation-grid', [
+        div(classes: 'simulation-controls', [
+          WavesimControls(
+              state: simState,
+              clear: clear
+          )
+        ]),
+        div(classes: 'wave-sources', [
+          WaveSourceControl(
+              sources: simState.sources,
+              size: simState.size
+          )
+        ]),
+        main_([
+          WavesimCanvas(
+              state: simState,
+              device: device,
+              clear: clear
+          ),
+        ])
       ])
-    ]);
+    );
   }
 
   @css

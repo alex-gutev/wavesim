@@ -3,7 +3,7 @@ import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 import 'package:universal_web/web.dart';
 
-import '../gpu/web_gpu_check.dart';
+import '../../webgpu/index.dart';
 import '../util/ref_element.dart';
 import 'wavesim_manager.dart';
 import 'wavesim_state.dart';
@@ -18,9 +18,13 @@ class WavesimCanvas extends CellComponent {
   /// When this cell is triggered, the simulation is reset to equilibrium.
   final ValueCell<void>? clear;
 
+  /// The GPU device on which to run the simulation.
+  final GPUDevice device;
+
   const WavesimCanvas({
     super.key,
     required this.state,
+    required this.device,
     this.clear
   });
 
@@ -31,40 +35,36 @@ class WavesimCanvas extends CellComponent {
     final width = MutableCell(640);
     final height = MutableCell(640);
 
-    return WebGPUCheck(
-        builder: (context, device) {
-          return WavesimManager(
-              device: device,
-              canvas: element,
-              state: state,
-              clear: clear,
+    return WavesimManager(
+        device: device,
+        canvas: element,
+        state: state,
+        clear: clear,
 
-              child: RefElement(
-                  onElementReady: (e) {
-                    element.value = e as HTMLCanvasElement;
-                  },
-                  child: Component.element(
-                      tag: 'canvas',
-                      // TODO: Size canvas using CSS
-                      attributes: {
-                        'width': width().toString(),
-                        'height': height().toString()
-                      },
+        child: RefElement(
+            onElementReady: (e) {
+              element.value = e as HTMLCanvasElement;
+            },
+            child: Component.element(
+                tag: 'canvas',
+                // TODO: Size canvas using CSS
+                attributes: {
+                  'width': width().toString(),
+                  'height': height().toString()
+                },
 
-                      events: {
-                        'resize': (_) => MutableCell.batch(() {
-                          final e = element.value;
+                events: {
+                  'resize': (_) => MutableCell.batch(() {
+                    final e = element.value;
 
-                          if (e != null) {
-                            width.value = e.clientWidth;
-                            height.value = e.clientHeight;
-                          }
-                        })
-                      }
-                  )
-              )
-          );
-        }
+                    if (e != null) {
+                      width.value = e.clientWidth;
+                      height.value = e.clientHeight;
+                    }
+                  })
+                }
+            )
+        )
     );
   }
 }
