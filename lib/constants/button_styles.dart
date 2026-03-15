@@ -24,6 +24,26 @@ class ButtonStyles {
 
   @css
   static List<StyleRule> get styles => [
+    css('button', [
+      css('&').styles(
+          backgroundColor: Theme.buttonBackground,
+          color: Theme.buttonForeground,
+          border: Border.unset,
+          radius: BorderRadius.all(Radius.circular(2.rem)),
+          cursor: Cursor.pointer,
+          fontWeight: FontWeight.bold,
+          padding: Padding.symmetric(
+              vertical: 0.5.rem,
+              horizontal: 2.em
+          )
+      ),
+
+      css('&:disabled').styles(
+          backgroundColor: Theme.disabled,
+          cursor: Cursor.defaultCursor
+      )
+    ]),
+
     css('button.$destructive').styles(
         raw: {
           Theme.varButtonBackground: 'var(${Theme.varError})'
