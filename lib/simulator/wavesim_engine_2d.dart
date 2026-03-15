@@ -1,5 +1,8 @@
 /// Wave simulation engine interface
 abstract interface class WavesimEngine2D {
+  /// The size of the simulation grid
+  int get size;
+
   /// Number of time steps for which the simulation has been running.
   int get time;
 

@@ -35,7 +35,7 @@ abstract class AlternatingSource extends WaveSource {
 
   /// The scale by which to multiply the amplitude at the current time.
   double scale(WavesimEngine2D engine) =>
-      cos(pi * frequency * (engine.time + phase) / 10);
+      cos(2 * pi * frequency * (engine.time + phase) / engine.size);
 
   @override
   @mustCallSuper

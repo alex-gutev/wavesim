@@ -19,6 +19,7 @@ final computeShaderSrc = _$computeShaderSrc;
 /// 2D longitudinal wave simulator
 class Wavesim2d implements WavesimEngine2D {
   /// The size of the grid.
+  @override
   final int size;
 
   /// GPU computation block size
