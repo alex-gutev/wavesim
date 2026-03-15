@@ -93,20 +93,10 @@ class _WavesimManagerState extends State<WavesimManager> {
 
   /// Run the simulation
   void _run([DOMHighResTimeStamp? timestamp]) async {
-    final frameDelay = component.state.value.frameDelay.inMilliseconds;
+    final frameDelay = component.state.value.frameDelay;
 
-    if (timestamp != null && frameDelay > 0) {
-      final interval = timestamp - _lastUpdateTime;
-
-      if (interval < frameDelay) {
-        await Future.delayed(
-            Duration(
-                milliseconds: (frameDelay - interval).round()
-            )
-        );
-      }
-
-      _lastUpdateTime = timestamp;
+    if (frameDelay > Duration.zero) {
+      await Future.delayed(frameDelay);
     }
 
     _updateSources();
