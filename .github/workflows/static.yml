@@ -36,6 +36,9 @@ jobs:
         
       - name: 'Setup Dart'
         uses: dart-lang/setup-dart@v1.3
+        with:
+          sdk: "3.10.9"
+          
       - name: 'Build Jaspr'
         run: |
           dart pub global activate jaspr_cli 0.21.7
