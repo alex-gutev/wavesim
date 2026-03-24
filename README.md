@@ -6,6 +6,10 @@ has a magnitude and a direction. This is in contrast to scalar wave
 simulators where the points making up the medium only have a magnitude
 (amplitude).
 
+You can try out it online in your browser
+(<https://gutev.dev/wavesim>). **Note**: A browser that supports
+WebGPU is required.
+
 _I built this as a toy project to test out WebGPU and my [Live
 Cells](https://livecell.gutev.dev) library._
 
