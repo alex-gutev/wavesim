@@ -2,7 +2,7 @@
 
 Wavesim2D is a web application that simulates waves travelling through
 a vector field medium. Each point in the medium is a vector meaning it
-has a magnitude and a direction. This is in contrast in scalar wave
+has a magnitude and a direction. This is in contrast to scalar wave
 simulators where the points making up the medium only have a magnitude
 (amplitude).
 
@@ -43,8 +43,8 @@ The *Wave Speed* slider controls the medium's wave propagation speed
 (*c*). What this actually controls is how much energy is transferred
 between the granules at each time step. When this parameter is set to
 the maximum value *1* the maximum amount of energy is transferred
-between the granules, which means each granule transfers *1/4* of its
-energy to each of its neighbours.
+between the granules, which means the granules transfer *1/4* of their
+energy to each of their neighbours.
 
 ## Boundary
 
@@ -59,12 +59,13 @@ There are two options:
 
 <dd>
 
-With this option the grid boundary "absorbs" the energy in the
-simulation, thus simulating an infinite medium. **Note**: This is only
-an approximation, there is always some amount of energy that is
-reflected back in the grid. This amount is negligible in most cases
-however becomes significant if there is a large amount of energy in
-the grid.
+The grid boundary "absorbs" the energy in the simulation, thus
+simulating an infinite medium.
+
+**Note**: This is only an approximation, there is always some amount
+of energy that is reflected back into the grid. This amount is
+negligible in most cases however becomes significant if there is a
+large amount of energy in the grid.
 
 </dd>
 
@@ -72,9 +73,8 @@ the grid.
 
 <dd>
 
-With this option the grid boundary reflects all energy back into the
-grid effectively simulating a closed finite medium (e.g. a ripple
-tank).
+The grid boundary reflects all the energy back into the grid
+effectively simulating a closed finite medium (e.g. a ripple tank).
 
 </dd>
 
@@ -100,12 +100,12 @@ This is the default rendering mode.
 
 ### Blocks
 
-Each granule is rendered as a square block that is rendered at the
-displaced position of the granule.
+The simulation is rendered as a grid of blocks. Each block is rendered
+at the position of its corresponding granule.
 
 **Note**: For grid sizes larger than *50 x 50*, downsampling is
-performed for efficiency, meaning each granule is displaced by the
-average displacement of the granules in a given square window.
+performed for efficiency. This means each block is rendered at the
+average position of the granules in a square window.
 
 ### Density
 
@@ -121,7 +121,7 @@ either the *x* or *y* axes. Cyan indicates an amplitude of *+1* while
 dark blue indicates an amplitude of *-1*.
 
 **Note**: Displacements with an absolute value larger than 1 are
-clamped to +1/-1.
+clamped to ±1.
 
 ## Wave Sources
 
@@ -135,7 +135,7 @@ simulate. Every source has the following common parameters:
 
 <dd>
 
-The frequency at which the source oscillates. This normalised such
+The frequency at which the source oscillates. This is normalised such
 that a frequency of 1 Hz results in one full cycle fitting in the grid
 at a time.
 
@@ -145,14 +145,14 @@ at a time.
 
 <dd>
 
-All wave source are synchronised with respect to a global time. This
-parameter controls the phase shift of a wave source and is expressed
-in multiples of Pi, that is a value of 1 indicates a phase shift of
-Pi, a value of 0.5 indicates a phase shift of Pi / 2.
+All wave source are synchronised with respect to the global simulation
+time. This parameter controls the phase shift of a wave source and is
+expressed in multiples of Pi, that is a value of 1 indicates a phase
+shift of Pi, a value of 0.5 indicates a phase shift of Pi / 2, etc.
 
 </dd>
 
-<dt> Pulse </dt>
+<dt>Pulse</dt>
 
 <dd>
 
@@ -163,7 +163,7 @@ step.
 
 </dl>
 
-You edit the parameters of a wave source and remove wave sources,
+You can edit the parameters of a wave source and remove wave sources,
 after they have been created.
 
 ### Point
@@ -174,8 +174,8 @@ axes.
 
 ### Line
 
-This source creates a wave that originates from a line with a given
-start and end point. Like the point source, you can specify the
+This source creates a wave that originates from a line with given
+start and end points. Like the point source, you can specify the
 amplitude in the both the *x* and *y* axes.
 
 ### Circle
@@ -194,7 +194,7 @@ point. The amplitude is a scalar value. A positive amplitude indicates
 a clockwise curl, while a negative amplitude indicates a
 counter-clockwise curl.
 
-#### Divergence
+### Divergence
 
 This source creates a divergence (or convergence) at a given
 point. The amplitude is a scalar value. If the amplitude is positive a
