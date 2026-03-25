@@ -120,20 +120,6 @@ class Wavesim2d implements WavesimEngine2D {
               binding: 5,
               visibility: $GPUShaderStage.COMPUTE,
               buffer: BufferLayout(
-                  type: 'storage'
-              )
-          ),
-          BindEntry(
-              binding: 6,
-              visibility: $GPUShaderStage.COMPUTE,
-              buffer: BufferLayout(
-                  type: 'storage'
-              )
-          ),
-          BindEntry(
-              binding: 7,
-              visibility: $GPUShaderStage.COMPUTE,
-              buffer: BufferLayout(
                   type: 'read-only-storage'
               )
           ),
@@ -152,8 +138,6 @@ class Wavesim2d implements WavesimEngine2D {
     final encoder = device.createCommandEncoder();
 
     _buffers.clear(encoder);
-    encoder.clearBuffer(_heatmap);
-    encoder.clearBuffer(_maxHeat);
     encoder.clearBuffer(_edge);
 
     _edgeSim.clear(encoder);
@@ -174,8 +158,6 @@ class Wavesim2d implements WavesimEngine2D {
     _paramsBuffer.destroy();
     _buffers.dispose();
     _damping.destroy();
-    _heatmap.destroy();
-    _maxHeat.destroy();
     _edge.destroy();
     _edgeFactors.destroy();
     _edgeSim.dispose();
@@ -225,9 +207,6 @@ class Wavesim2d implements WavesimEngine2D {
   Future<void> update() async {
     final bindGroup = _buffers.isFirst ? _bindGroup1 : _bindGroup2;
     final encoder = device.createCommandEncoder();
-
-    encoder.clearBuffer(_heatmap);
-    encoder.clearBuffer(_maxHeat);
 
     if (!closed) {
       _edgeSim.addTo(encoder);
@@ -307,12 +286,6 @@ class Wavesim2d implements WavesimEngine2D {
 
   /// Buffer holding the damping coefficients of the grid
   late final GPUBuffer _damping;
-
-  /// Buffer into which the heat map is written
-  late final GPUBuffer _heatmap;
-
-  /// Buffer into which the maximum heat is written
-  late final GPUBuffer _maxHeat;
 
   /// Buffer holding the boundary values
   ///
@@ -411,7 +384,6 @@ class Wavesim2d implements WavesimEngine2D {
 
     _initDamping();
     _initBoundary();
-    _initHeatmap();
 
     _bindGroup1 = _makeBindGroup(u1, u2);
     _bindGroup2 = _makeBindGroup(u2, u1);
@@ -423,8 +395,6 @@ class Wavesim2d implements WavesimEngine2D {
     _renderer.init(
         size: size,
         sizeBuffer: _sizeBuffer,
-        heatmap: _heatmap,
-        maxHeat: _maxHeat,
         buffers: _buffers
     );
   }
@@ -445,23 +415,6 @@ class Wavesim2d implements WavesimEngine2D {
        usage: $GPUBufferUsage.STORAGE |
         $GPUBufferUsage.UNIFORM,
      );
-  }
-
-  /// Create the buffers for holding the heat map and maximum heat
-  void _initHeatmap() {
-    _heatmap = _makeUInt32Buffer(
-        types.Uint32List(area),
-        usage: $GPUBufferUsage.STORAGE |
-          $GPUBufferUsage.VERTEX |
-          $GPUBufferUsage.COPY_DST
-    );
-    
-    _maxHeat = _makeUInt32Buffer(
-        types.Uint32List(1),
-        usage: $GPUBufferUsage.STORAGE |
-          $GPUBufferUsage.VERTEX |
-          $GPUBufferUsage.COPY_DST
-    );
   }
 
   /// Initialize the buffers for computing the boundary values
@@ -617,18 +570,6 @@ class Wavesim2d implements WavesimEngine2D {
               ),
               BindGroupEntry(
                   binding: 5,
-                  resource: GPUBufferBinding(
-                      buffer: _heatmap
-                  )
-              ),
-              BindGroupEntry(
-                  binding: 6,
-                  resource: GPUBufferBinding(
-                      buffer: _maxHeat
-                  )
-              ),
-              BindGroupEntry(
-                  binding: 7,
                   resource: GPUBufferBinding(
                       buffer: _edge,
                   )

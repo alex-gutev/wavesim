@@ -114,8 +114,6 @@ class ColorRenderer implements WavesimRenderer {
   void init({
     required int size,
     required GPUBuffer sizeBuffer,
-    required GPUBuffer heatmap,
-    required GPUBuffer maxHeat,
     required SimBuffer buffers
   }) {
     _initBuffers(size);

@@ -3,8 +3,8 @@ import 'package:embed_annotation/embed_annotation.dart';
 import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
 
+import 'compute_heatmap.dart';
 import 'sim_buffer.dart';
-
 import 'wavesim_renderer.dart';
 import '../webgpu/index.dart';
 
@@ -67,8 +67,6 @@ class HeatmapRenderer implements WavesimRenderer {
   void init({
     required int size,
     required GPUBuffer sizeBuffer,
-    required GPUBuffer heatmap,
-    required GPUBuffer maxHeat,
     required SimBuffer buffers
   }) {
     _vertBuffer = device.makeFloat32Buffer(
@@ -94,12 +92,23 @@ class HeatmapRenderer implements WavesimRenderer {
         ].toJS
     );
 
-    _heatBuffer = device.makeUint32Buffer(
+    _computeHeatmap = ComputeHeatmap(
+        device: device,
+        size: size,
+        windowSize: 1,
+        blockSize: 8,
+        sizeBuffer: sizeBuffer,
+        buffers: buffers
+    );
+
+    final heatmapSize = _computeHeatmap.heatmapSize - 1;
+
+    _heatmapIndexBuffer = device.makeUint32Buffer(
         data: types.Uint32List.fromList([
           0, 0,
-          0, size,
-          size, 0,
-          size, size
+          0, heatmapSize,
+          heatmapSize, 0,
+          heatmapSize, heatmapSize
         ]),
 
         usage: $GPUBufferUsage.VERTEX
@@ -157,13 +166,13 @@ class HeatmapRenderer implements WavesimRenderer {
             BindGroupEntry(
                 binding: 1,
                 resource: GPUBufferBinding(
-                    buffer: heatmap
+                    buffer: _computeHeatmap.heatmap
                 )
             ),
             BindGroupEntry(
                 binding: 2,
                 resource: GPUBufferBinding(
-                    buffer: maxHeat
+                    buffer: _computeHeatmap.maxHeat
                 )
             )
           ].toJS
@@ -174,11 +183,14 @@ class HeatmapRenderer implements WavesimRenderer {
   @override
   void dispose() {
     _vertBuffer.destroy();
-    _heatBuffer.destroy();
+    _heatmapIndexBuffer.destroy();
+    _computeHeatmap.dispose();
   }
 
   @override
   void render({required GPUCommandEncoder encoder, required GPUBuffer data}) {
+    _computeHeatmap.addTo(encoder);
+
     final view = context.getCurrentTexture();
 
     final render = encoder.beginRenderPass(
@@ -195,7 +207,7 @@ class HeatmapRenderer implements WavesimRenderer {
 
     render.setPipeline(_renderPipeline);
     render.setVertexBuffer(0, _vertBuffer);
-    render.setVertexBuffer(1, _heatBuffer);
+    render.setVertexBuffer(1, _heatmapIndexBuffer);
     render.setBindGroup(0, _uniformBindGroup);
     render.draw(4);
     render.end();
@@ -221,11 +233,13 @@ class HeatmapRenderer implements WavesimRenderer {
   late final GPUBuffer _vertBuffer;
 
   /// Buffer holding the heatmap coordinates associated with each vertex
-  late final GPUBuffer _heatBuffer;
+  late final GPUBuffer _heatmapIndexBuffer;
 
   /// The rendering pipeline
   late final GPURenderPipeline _renderPipeline;
 
   /// Bind group for the uniform variables
   late final GPUBindGroup _uniformBindGroup;
+
+  late final ComputeHeatmap _computeHeatmap;
 }

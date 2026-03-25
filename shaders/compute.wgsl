@@ -4,10 +4,7 @@
 @group(0) @binding(3) var<storage, read> u: array<f32>;
 @group(0) @binding(4) var<storage, read_write> up: array<f32>;
 
-@group(0) @binding(5) var<storage, read_write> heatmap: array<atomic<u32>>;
-@group(0) @binding(6) var<storage, read_write> maxHeat: atomic<u32>;
-
-@group(0) @binding(7) var<storage, read> edge : array<vec4f>;
+@group(0) @binding(5) var<storage, read> edge : array<vec4f>;
 
 override blockSize = 8;
 
@@ -45,13 +42,6 @@ fn setPos(x: u32, y: u32, pos: vec2f) {
   up[index+1] = pos.y;
 
   let pt = vec2u(vec2f(f32(x), f32(y)) + pos);
-
-  if ((pt.x >= 0 && pt.x < size) &&
-      (pt.y >= 0 && pt.y < size)) {
-    let h = pt.y * size + pt.x;
-    let heat = atomicAdd(&heatmap[h], 1) + 1;
-    atomicMax(&maxHeat, heat);
-  }
 }
 
 @compute @workgroup_size(blockSize, blockSize)

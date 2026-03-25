@@ -8,15 +8,10 @@ abstract interface class WavesimRenderer {
   /// [size] is the size of the grid.
   /// [sizeBuffer] is a buffer holding the size of the grid.
   ///
-  /// [heatmap] and [maxHeat] are the buffers into which the heatmap and maximum
-  /// heat are written.
-  ///
   /// [buffers] is the [SimBuffer] object holding the simulation state buffers.
   void init({
     required int size,
     required GPUBuffer sizeBuffer,
-    required GPUBuffer heatmap,
-    required GPUBuffer maxHeat,
     required SimBuffer buffers
   });
 
