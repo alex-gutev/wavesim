@@ -10,7 +10,7 @@ void main() {
 
   runApp(Document(
     title: 'Wavesim2D - Vector wave simulator',
-    base: '/wavesim',
+    //base: '/wavesim',
     styles: [
       css.import('https://fonts.googleapis.com/css?family=Roboto'),
       css('html, body').styles(

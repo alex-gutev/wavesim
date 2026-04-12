@@ -24,6 +24,7 @@ class GraphicsControls extends CellComponent {
           WavesimGraphics.heatmap => text('Density'),
           WavesimGraphics.colorX => text('X Amplitude'),
           WavesimGraphics.colorY => text('Y Amplitude'),
+          WavesimGraphics.grid => text('Grid'),
         }
     )
   ]);

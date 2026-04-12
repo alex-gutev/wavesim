@@ -13,14 +13,17 @@ enum WavesimGraphics {
   /// Render the state as discrete blocks
   blocks,
 
-  /// Render the state as a heatmap
-  heatmap,
+  /// Render the state as a grid
+  grid,
 
   /// Render the X component as color
   colorX,
 
   /// Render the Y component as color
-  colorY
+  colorY,
+
+  /// Render the state as a heatmap
+  heatmap,
 }
 
 /// Represents the state of a wave simulator.

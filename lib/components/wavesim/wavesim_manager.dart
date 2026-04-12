@@ -3,6 +3,7 @@ import 'package:live_cells_core/live_cells_core.dart';
 import 'package:live_cells_jaspr/live_cells_jaspr.dart';
 import 'package:universal_web/js_interop.dart';
 import 'package:universal_web/web.dart';
+import 'package:wavesim/simulator/grid_renderer.dart';
 
 import '../../simulator/color_renderer.dart';
 import '../../simulator/wave_source.dart';
@@ -138,6 +139,11 @@ class _WavesimManagerState extends State<WavesimManager> {
         device: component.device,
         context: canvas.getContext('webgpu') as GPUCanvasContext,
         component: 1
+    ),
+
+    WavesimGraphics.grid => GridRenderer(
+      device: component.device,
+      context: canvas.getContext('webgpu') as GPUCanvasContext,
     ),
   };
 
