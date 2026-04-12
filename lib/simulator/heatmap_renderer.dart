@@ -101,7 +101,7 @@ class HeatmapRenderer implements WavesimRenderer {
         buffers: buffers
     );
 
-    final heatmapSize = _computeHeatmap.heatmapSize - 1;
+    final heatmapSize = _computeHeatmap.heatmapSize;
 
     _heatmapIndexBuffer = device.makeUint32Buffer(
         data: types.Uint32List.fromList([
@@ -160,7 +160,7 @@ class HeatmapRenderer implements WavesimRenderer {
             BindGroupEntry(
                 binding: 0,
                 resource: GPUBufferBinding(
-                    buffer: sizeBuffer
+                    buffer: _computeHeatmap.heatmapSizeBuffer
                 )
             ),
             BindGroupEntry(

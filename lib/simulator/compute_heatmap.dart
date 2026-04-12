@@ -48,6 +48,9 @@ class ComputeHeatmap {
   /// Buffer holding the largest heat value recorded
   GPUBuffer get maxHeat => _maxHeat;
 
+  /// Buffer holding the size of the heatmap
+  GPUBuffer get heatmapSizeBuffer => _heatmapSizeBuffer;
+
   ComputeHeatmap({
     required this.device,
     required this.size,
